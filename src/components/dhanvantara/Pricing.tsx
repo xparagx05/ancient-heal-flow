@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
+import { useBooking } from "@/context/BookingContext";
 
 const plans = [
   {
@@ -29,6 +30,7 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const { openBooking } = useBooking();
   return (
     <section id="pricing" className="relative py-32 px-6 overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-3xl" />
@@ -82,10 +84,11 @@ export default function Pricing() {
                 ))}
               </ul>
               <button
-                className={`mt-8 w-full py-3 rounded-full font-medium transition-all hover:scale-[1.02] ${
+                onClick={() => openBooking(null)}
+                className={`ripple mt-8 w-full py-3 rounded-full font-medium transition-all hover:scale-[1.02] ${
                   p.highlight
                     ? "bg-gradient-primary text-primary-foreground glow-primary"
-                    : "glass hover:bg-white"
+                    : "glass hover:bg-background/60"
                 }`}
               >
                 {p.cta}
