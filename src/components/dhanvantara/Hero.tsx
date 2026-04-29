@@ -1,14 +1,19 @@
 import { motion } from "framer-motion";
 import HeroOrb from "./HeroOrb";
 import { ArrowRight, Stethoscope } from "lucide-react";
+import { useBooking } from "@/context/BookingContext";
 
 export default function Hero() {
+  const { openBooking, openVideo } = useBooking();
   return (
     <section id="top" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
-      {/* Soft floating blobs */}
-      <div className="absolute top-1/4 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 -right-24 w-[28rem] h-[28rem] rounded-full bg-secondary/60 blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-      <div className="absolute top-10 right-1/3 w-72 h-72 rounded-full bg-accent/30 blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+      <div className="absolute top-1/4 -left-24 w-96 h-96 rounded-full bg-accent/30 blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 -right-24 w-[28rem] h-[28rem] rounded-full bg-primary/30 blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+      <div className="absolute top-10 right-1/3 w-72 h-72 rounded-full bg-accent/20 blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+
+      {/* Neon gradient lines */}
+      <div className="absolute top-[28%] inset-x-0 h-px neon-line opacity-60" />
+      <div className="absolute bottom-[18%] inset-x-0 h-px neon-line opacity-40" />
 
       <HeroOrb />
 
@@ -31,7 +36,7 @@ export default function Hero() {
         >
           Dhanvantara
           <br />
-          <span className="italic text-gradient">AI</span>
+          <span className="italic text-gradient-gold">AI</span>
         </motion.h1>
 
         <motion.p
@@ -59,12 +64,18 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.65 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <button className="group relative px-7 py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-medium flex items-center gap-2 transition-all hover:scale-105 hover:glow-primary shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.7)]">
+          <button
+            onClick={() => openBooking(null)}
+            className="ripple group relative px-7 py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-medium flex items-center gap-2 transition-all hover:scale-105 hover:glow-primary shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.7)]"
+          >
             Book Appointment
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </button>
-          <button className="px-7 py-3.5 rounded-full glass font-medium flex items-center gap-2 hover:scale-105 transition-transform">
-            <Stethoscope className="w-4 h-4 text-primary" />
+          <button
+            onClick={openVideo}
+            className="ripple px-7 py-3.5 rounded-full glass font-medium flex items-center gap-2 hover:scale-105 transition-transform"
+          >
+            <Stethoscope className="w-4 h-4 text-accent" />
             Start Consultation
           </button>
         </motion.div>
@@ -77,14 +88,13 @@ export default function Hero() {
         >
           {["10K+ Consultations", "500+ Doctors", "4.9★ Rated"].map((t) => (
             <div key={t} className="flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-primary" />
+              <span className="w-1 h-1 rounded-full bg-accent" />
               {t}
             </div>
           ))}
         </motion.div>
       </div>
 
-      {/* Scroll cue */}
       <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}

@@ -1,32 +1,61 @@
-import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import logo from "@/assets/dhanvantara-logo.png";
+import ThemeToggle from "./ThemeToggle";
+import { useBooking } from "@/context/BookingContext";
+
+const links = [
+  { label: "Home", emoji: "🏠", href: "#top" },
+  { label: "Doctors", emoji: "🩺", href: "#doctors" },
+  { label: "Pricing", emoji: "💳", href: "#pricing" },
+  { label: "Dashboard", emoji: "📊", href: "#dashboard" },
+];
 
 export default function Navbar() {
-  const links = ["Features", "Doctors", "Pricing", "Dashboard"];
+  const { scrollY } = useScroll();
+  const padY = useTransform(scrollY, [0, 120], [16, 8]);
+  const { openBooking } = useBooking();
+
   return (
     <motion.nav
       initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[min(94%,1100px)]"
+      style={{ paddingTop: padY }}
+      className="fixed top-0 inset-x-0 z-50 px-3"
     >
-      <div className="glass rounded-full px-6 py-3 flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-full bg-gradient-primary grid place-items-center glow-primary">
-            <Sparkles className="w-4 h-4 text-white" />
+      <div className="mx-auto w-[min(96%,1180px)] glass rounded-full pl-3 pr-3 py-2 flex items-center justify-between gap-3 shadow-[0_10px_40px_-15px_hsl(var(--primary)/0.4)]">
+        <a href="#top" className="flex items-center gap-2.5 group">
+          <div className="relative w-11 h-11 rounded-full overflow-hidden ring-1 ring-accent/40 transition-all group-hover:ring-2 group-hover:ring-accent group-hover:shadow-[0_0_24px_hsl(var(--accent)/0.7)]">
+            <img src={logo} alt="Dhanvantara AI logo" className="w-full h-full object-cover" />
           </div>
-          <span className="font-display text-lg tracking-wide">Dhanvantara<span className="text-gradient-gold"> AI</span></span>
+          <span className="font-display text-lg tracking-wide hidden sm:inline">
+            Dhanvantara<span className="text-gradient-gold"> AI</span>
+          </span>
         </a>
-        <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
+
+        <div className="hidden md:flex items-center gap-1 text-sm">
           {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} className="relative hover:text-foreground transition-colors after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 after:bg-primary hover:after:w-full after:transition-all">
-              {l}
+            <a
+              key={l.label}
+              href={l.href}
+              className="relative px-3.5 py-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <span className="mr-1.5">{l.emoji}</span>
+              {l.label}
+              <span className="absolute left-3.5 right-3.5 -bottom-0.5 h-px bg-gradient-to-r from-accent to-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
             </a>
           ))}
         </div>
-        <button className="px-4 py-2 rounded-full text-sm font-medium bg-gradient-primary text-primary-foreground hover:scale-105 transition-transform shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.6)]">
-          Sign in
-        </button>
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => openBooking(null)}
+            className="ripple px-4 py-2 rounded-full text-sm font-medium bg-gradient-gold text-foreground hover:scale-105 transition-transform shadow-[0_8px_24px_-8px_hsl(var(--accent)/0.7)]"
+          >
+            Book now
+          </button>
+        </div>
       </div>
     </motion.nav>
   );
