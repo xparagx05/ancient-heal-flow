@@ -28,11 +28,11 @@ const Index = () => {
       <Navbar />
       <Hero />
       <Features />
+      <Founder />
       <Experience />
       <Doctors />
       <Pricing />
       <DashboardPreview />
-      <Founder />
       <Footer />
       <ChatBot />
       <EmergencyButton />
