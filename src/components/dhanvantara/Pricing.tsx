@@ -1,27 +1,34 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
-import { useBooking } from "@/context/BookingContext";
+import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/context/I18nContext";
 
 const plans = [
   {
+    id: "starter" as const,
     name: "Starter",
     price: "₹0",
+    amount: 0,
     period: "first 5 consults",
     features: ["AI Health Assistant", "Standard booking", "Digital prescriptions", "Email support"],
     cta: "Start free",
     highlight: false,
   },
   {
+    id: "pro" as const,
     name: "Pro",
     price: "₹299",
+    amount: 299,
     period: "/month",
     features: ["Unlimited consults", "Priority slots", "Specialist access", "Family profiles (4)", "24/7 chat support"],
     cta: "Go Pro",
     highlight: true,
   },
   {
+    id: "basic" as const,
     name: "Basic",
     price: "₹99",
+    amount: 99,
     period: "/month",
     features: ["10 consults/mo", "Basic AI insights", "Digital prescriptions", "Standard support"],
     cta: "Choose Basic",
@@ -30,7 +37,18 @@ const plans = [
 ];
 
 export default function Pricing() {
-  const { openBooking } = useBooking();
+  const navigate = useNavigate();
+  const { t } = useI18n();
+
+  function handleSelect(planId: string) {
+    if (planId === "starter") {
+      // Free — no payment needed
+      navigate("/dashboard");
+      return;
+    }
+    navigate(`/subscription-payment/${planId}`);
+  }
+
   return (
     <section id="pricing" className="relative py-32 px-6 overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] rounded-full bg-primary/10 blur-3xl" />
@@ -42,11 +60,11 @@ export default function Pricing() {
           transition={{ duration: 0.7 }}
           className="text-center mb-16"
         >
-          <p className="text-xs tracking-[0.3em] text-primary mb-4">— PRICING —</p>
+          <p className="text-xs tracking-[0.3em] text-primary mb-4">{t("pricing.kicker")}</p>
           <h2 className="font-display text-5xl md:text-6xl">
-            Care that <span className="text-gradient italic">scales</span> with you.
+            {t("pricing.title1")} <span className="text-gradient italic">{t("pricing.title2")}</span> {t("pricing.title3")}
           </h2>
-          <p className="mt-5 text-muted-foreground">Your first 5 consultations are on us. Always.</p>
+          <p className="mt-5 text-muted-foreground">{t("pricing.subtitle")}</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-center">
@@ -65,7 +83,7 @@ export default function Pricing() {
             >
               {p.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-gold text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" /> Most loved
+                  <Sparkles className="w-3 h-3" /> {t("pricing.mostLoved")}
                 </div>
               )}
               <h3 className="font-display text-2xl">{p.name}</h3>
@@ -84,7 +102,7 @@ export default function Pricing() {
                 ))}
               </ul>
               <button
-                onClick={() => openBooking(null)}
+                onClick={() => handleSelect(p.id)}
                 className={`ripple mt-8 w-full py-3 rounded-full font-medium transition-all hover:scale-[1.02] ${
                   p.highlight
                     ? "bg-gradient-primary text-primary-foreground glow-primary"
