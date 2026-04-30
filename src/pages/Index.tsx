@@ -9,10 +9,6 @@ import Founder from "@/components/dhanvantara/Founder";
 import Footer from "@/components/dhanvantara/Footer";
 import ChatBot from "@/components/dhanvantara/ChatBot";
 import EmergencyButton from "@/components/dhanvantara/EmergencyButton";
-import BookingModal from "@/components/dhanvantara/BookingModal";
-import PaymentModal from "@/components/dhanvantara/PaymentModal";
-import VideoComingSoon from "@/components/dhanvantara/VideoComingSoon";
-import { useBooking } from "@/context/BookingContext";
 import { useEffect } from "react";
 
 const Index = () => {
@@ -40,20 +36,8 @@ const Index = () => {
       <Footer />
       <ChatBot />
       <EmergencyButton />
-      <Modals />
     </main>
   );
 };
-
-function Modals() {
-  const { bookingDoctor, paymentFor } = useBooking();
-  return (
-    <>
-      {bookingDoctor && <BookingModal />}
-      {paymentFor && <PaymentModal />}
-      <VideoComingSoon />
-    </>
-  );
-}
 
 export default Index;

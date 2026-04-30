@@ -1,13 +1,15 @@
 import { motion, useScroll, useTransform } from "framer-motion";
+import { Link } from "react-router-dom";
 import logo from "@/assets/dhanvantara-logo.png";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
 import { useBooking } from "@/context/BookingContext";
 
 const links = [
-  { label: "Home", emoji: "🏠", href: "#top" },
-  { label: "Doctors", emoji: "🩺", href: "#doctors" },
-  { label: "Pricing", emoji: "💳", href: "#pricing" },
-  { label: "Dashboard", emoji: "📊", href: "#dashboard" },
+  { label: "Home", emoji: "🏠", to: "/" },
+  { label: "Doctors", emoji: "🩺", to: "/#doctors" },
+  { label: "Pricing", emoji: "💳", to: "/pricing" },
+  { label: "Dashboard", emoji: "📊", to: "/dashboard" },
 ];
 
 export default function Navbar() {
@@ -24,30 +26,31 @@ export default function Navbar() {
       className="fixed top-0 inset-x-0 z-50 px-3"
     >
       <div className="mx-auto w-[min(96%,1180px)] glass rounded-full pl-3 pr-3 py-2 flex items-center justify-between gap-3 shadow-[0_10px_40px_-15px_hsl(var(--primary)/0.4)]">
-        <a href="#top" className="flex items-center gap-2.5 group">
+        <Link to="/" className="flex items-center gap-2.5 group">
           <div className="relative w-11 h-11 rounded-full overflow-hidden ring-1 ring-accent/40 transition-all group-hover:ring-2 group-hover:ring-accent group-hover:shadow-[0_0_24px_hsl(var(--accent)/0.7)]">
             <img src={logo} alt="Dhanvantara AI logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-display text-lg tracking-wide hidden sm:inline">
             Dhanvantara<span className="text-gradient-gold"> AI</span>
           </span>
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-1 text-sm">
           {links.map((l) => (
-            <a
+            <Link
               key={l.label}
-              href={l.href}
+              to={l.to}
               className="relative px-3.5 py-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors group"
             >
               <span className="mr-1.5">{l.emoji}</span>
               {l.label}
               <span className="absolute left-3.5 right-3.5 -bottom-0.5 h-px bg-gradient-to-r from-accent to-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
-            </a>
+            </Link>
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <NotificationBell />
           <ThemeToggle />
           <button
             onClick={() => openBooking(null)}

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { X, Calendar, Clock, Phone, CheckCircle2, Stethoscope, MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, Calendar, Clock, Phone, Stethoscope } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
 
 const doctors = [
@@ -13,13 +14,12 @@ const doctors = [
 const slots = ["09:00 AM", "10:30 AM", "12:00 PM", "02:30 PM", "04:00 PM", "06:30 PM"];
 
 export default function BookingModal() {
-  const { bookingDoctor, closeBooking, addAppointment, openPayment } = useBooking();
-  const [step, setStep] = useState<"form" | "success">("form");
+  const { bookingDoctor, closeBooking, addAppointment } = useBooking();
+  const navigate = useNavigate();
   const [doctor, setDoctor] = useState(bookingDoctor?.name ?? doctors[0].name);
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [time, setTime] = useState(slots[0]);
   const [phone, setPhone] = useState("");
-  const [confirmed, setConfirmed] = useState<null | ReturnType<typeof addAppointment>>(null);
 
   if (!bookingDoctor) return null;
 
@@ -41,29 +41,14 @@ export default function BookingModal() {
       phone,
       amount: selectedDoc.price,
     });
-    setConfirmed(appt);
-    setStep("success");
+    closeBooking();
+    setPhone("");
+    navigate(`/payment/${appt.id}`);
   }
 
   function handleClose() {
     closeBooking();
-    setTimeout(() => {
-      setStep("form");
-      setConfirmed(null);
-      setPhone("");
-    }, 300);
-  }
-
-  function handlePay() {
-    if (confirmed) {
-      openPayment(confirmed);
-      closeBooking();
-      setTimeout(() => {
-        setStep("form");
-        setConfirmed(null);
-        setPhone("");
-      }, 300);
-    }
+    setTimeout(() => setPhone(""), 300);
   }
 
   return (
@@ -91,107 +76,78 @@ export default function BookingModal() {
             <X className="w-4 h-4" />
           </button>
 
-          {step === "form" && (
-            <>
-              <div className="flex items-center gap-2 mb-1">
-                <Stethoscope className="w-4 h-4 text-primary" />
-                <p className="text-xs tracking-[0.25em] text-primary">— BOOK APPOINTMENT —</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Stethoscope className="w-4 h-4 text-primary" />
+            <p className="text-xs tracking-[0.25em] text-primary">— BOOK APPOINTMENT —</p>
+          </div>
+          <h3 className="font-display text-3xl mb-6">Reserve your slot</h3>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="text-xs text-muted-foreground">Doctor</label>
+              <select
+                value={doctor}
+                onChange={(e) => setDoctor(e.target.value)}
+                className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                {[selectedDoc, ...doctors.filter((d) => d.name !== selectedDoc.name)].map((d) => (
+                  <option key={d.name} value={d.name}>
+                    {d.name} — {d.specialty} (₹{d.price})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Date</label>
+                <input
+                  type="date"
+                  value={date}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
               </div>
-              <h3 className="font-display text-3xl mb-6">Reserve your slot</h3>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-xs text-muted-foreground">Doctor</label>
-                  <select
-                    value={doctor}
-                    onChange={(e) => setDoctor(e.target.value)}
-                    className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  >
-                    {[selectedDoc, ...doctors.filter((d) => d.name !== selectedDoc.name)].map((d) => (
-                      <option key={d.name} value={d.name}>
-                        {d.name} — {d.specialty} (₹{d.price})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> Date</label>
-                    <input
-                      type="date"
-                      value={date}
-                      min={new Date().toISOString().slice(0, 10)}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> Time slot</label>
-                    <select
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    >
-                      {slots.map((s) => <option key={s}>{s}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone Number</label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="98765 43210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2 text-sm">
-                  <span className="text-muted-foreground">Consultation fee</span>
-                  <span className="font-display text-xl text-gradient-gold">₹{selectedDoc.price}</span>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-medium hover:scale-[1.02] transition glow-primary"
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> Time slot</label>
+                <select
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
-                  Confirm Appointment
-                </button>
-              </form>
-            </>
-          )}
-
-          {step === "success" && confirmed && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-2">
-              <div className="mx-auto w-16 h-16 rounded-full bg-gradient-primary grid place-items-center glow-primary mb-4">
-                <CheckCircle2 className="w-8 h-8 text-white" />
+                  {slots.map((s) => <option key={s}>{s}</option>)}
+                </select>
               </div>
-              <h3 className="font-display text-3xl">Appointment Confirmed</h3>
-              <p className="mt-2 text-muted-foreground">
-                Your appointment with <span className="text-foreground font-medium">{confirmed.doctor}</span> is confirmed at{" "}
-                <span className="text-foreground font-medium">{confirmed.time}</span> on{" "}
-                <span className="text-foreground font-medium">{confirmed.date}</span>.
-              </p>
+            </div>
 
-              <div className="mt-5 mx-auto max-w-sm flex items-center justify-center gap-2 text-sm glass rounded-full px-4 py-2.5">
-                <MessageSquare className="w-4 h-4 text-primary" />
-                📩 Confirmation sent to +91 {confirmed.phone}
-              </div>
+            <div>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone Number</label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="98765 43210"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button onClick={handleClose} className="py-3 rounded-full glass font-medium hover:bg-background/60">
-                  Done
-                </button>
-                <button onClick={handlePay} className="py-3 rounded-full bg-gradient-gold text-foreground font-medium hover:scale-[1.02] transition glow-gold">
-                  Pay ₹{confirmed.amount}
-                </button>
-              </div>
-            </motion.div>
-          )}
+            <div className="flex items-center justify-between pt-2 text-sm">
+              <span className="text-muted-foreground">Consultation fee</span>
+              <span className="font-display text-xl text-gradient-gold">₹{selectedDoc.price}</span>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-medium hover:scale-[1.02] transition glow-primary"
+            >
+              Confirm Appointment → Pay
+            </button>
+            <p className="text-[11px] text-center text-muted-foreground">
+              You'll be redirected to a secure payment page.
+            </p>
+          </form>
         </motion.div>
       </motion.div>
     </AnimatePresence>
