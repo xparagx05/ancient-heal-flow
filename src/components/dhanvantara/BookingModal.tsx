@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { X, Calendar, Clock, Phone, CheckCircle2, Stethoscope, MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, Calendar, Clock, Phone, Stethoscope } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
 
 const doctors = [
@@ -13,13 +14,12 @@ const doctors = [
 const slots = ["09:00 AM", "10:30 AM", "12:00 PM", "02:30 PM", "04:00 PM", "06:30 PM"];
 
 export default function BookingModal() {
-  const { bookingDoctor, closeBooking, addAppointment, openPayment } = useBooking();
-  const [step, setStep] = useState<"form" | "success">("form");
+  const { bookingDoctor, closeBooking, addAppointment } = useBooking();
+  const navigate = useNavigate();
   const [doctor, setDoctor] = useState(bookingDoctor?.name ?? doctors[0].name);
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [time, setTime] = useState(slots[0]);
   const [phone, setPhone] = useState("");
-  const [confirmed, setConfirmed] = useState<null | ReturnType<typeof addAppointment>>(null);
 
   if (!bookingDoctor) return null;
 
@@ -41,29 +41,14 @@ export default function BookingModal() {
       phone,
       amount: selectedDoc.price,
     });
-    setConfirmed(appt);
-    setStep("success");
+    closeBooking();
+    setPhone("");
+    navigate(`/payment/${appt.id}`);
   }
 
   function handleClose() {
     closeBooking();
-    setTimeout(() => {
-      setStep("form");
-      setConfirmed(null);
-      setPhone("");
-    }, 300);
-  }
-
-  function handlePay() {
-    if (confirmed) {
-      openPayment(confirmed);
-      closeBooking();
-      setTimeout(() => {
-        setStep("form");
-        setConfirmed(null);
-        setPhone("");
-      }, 300);
-    }
+    setTimeout(() => setPhone(""), 300);
   }
 
   return (
