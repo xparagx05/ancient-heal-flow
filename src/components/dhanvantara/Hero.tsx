@@ -2,9 +2,11 @@ import { motion } from "framer-motion";
 import HeroOrb from "./HeroOrb";
 import { ArrowRight, Stethoscope } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
+import { useI18n } from "@/context/I18nContext";
 
 export default function Hero() {
   const { openBooking, openVideo } = useBooking();
+  const { t } = useI18n();
   return (
     <section id="top" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
       <div className="absolute top-1/4 -left-24 w-96 h-96 rounded-full bg-accent/30 blur-3xl animate-float" />
@@ -25,7 +27,7 @@ export default function Hero() {
           className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs mb-8"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-gradient-gold animate-pulse" />
-          <span className="text-muted-foreground tracking-wide">Powered by Lovable AI · v1.0</span>
+          <span className="text-muted-foreground tracking-wide">{t("hero.badge")}</span>
         </motion.div>
 
         <motion.h1
@@ -45,7 +47,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.35 }}
           className="mt-6 font-display italic text-xl md:text-2xl text-foreground/70"
         >
-          Ancient Wisdom. Modern Healing.
+          {t("hero.tagline")}
         </motion.p>
 
         <motion.p
@@ -54,8 +56,7 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mt-5 max-w-xl mx-auto text-base md:text-lg text-muted-foreground"
         >
-          Experience intelligent healthcare powered by AI — book trusted doctors,
-          consult by video, and receive instant prescriptions. All in one breath.
+          {t("hero.subtitle")}
         </motion.p>
 
         <motion.div
@@ -68,7 +69,7 @@ export default function Hero() {
             onClick={() => openBooking(null)}
             className="ripple group relative px-7 py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-medium flex items-center gap-2 transition-all hover:scale-105 hover:glow-primary shadow-[0_12px_30px_-10px_hsl(var(--primary)/0.7)]"
           >
-            Book Appointment
+            {t("hero.book")}
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </button>
           <button
@@ -76,7 +77,7 @@ export default function Hero() {
             className="ripple px-7 py-3.5 rounded-full glass font-medium flex items-center gap-2 hover:scale-105 transition-transform"
           >
             <Stethoscope className="w-4 h-4 text-accent" />
-            Start Consultation
+            {t("hero.consult")}
           </button>
         </motion.div>
 
@@ -100,7 +101,7 @@ export default function Hero() {
         transition={{ duration: 2, repeat: Infinity }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground tracking-widest"
       >
-        SCROLL ↓
+        {t("hero.scroll")}
       </motion.div>
     </section>
   );

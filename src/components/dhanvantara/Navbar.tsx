@@ -3,19 +3,21 @@ import { Link } from "react-router-dom";
 import logo from "@/assets/dhanvantara-logo.png";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
+import LanguageToggle from "./LanguageToggle";
 import { useBooking } from "@/context/BookingContext";
-
-const links = [
-  { label: "Home", emoji: "🏠", to: "/" },
-  { label: "Doctors", emoji: "🩺", to: "/#doctors" },
-  { label: "Pricing", emoji: "💳", to: "/pricing" },
-  { label: "Dashboard", emoji: "📊", to: "/dashboard" },
-];
+import { useI18n } from "@/context/I18nContext";
 
 export default function Navbar() {
   const { scrollY } = useScroll();
   const padY = useTransform(scrollY, [0, 120], [16, 8]);
   const { openBooking } = useBooking();
+  const { t } = useI18n();
+  const links = [
+    { label: t("nav.home"), emoji: "🏠", to: "/" },
+    { label: t("nav.doctors"), emoji: "🩺", to: "/#doctors" },
+    { label: t("nav.pricing"), emoji: "💳", to: "/pricing" },
+    { label: t("nav.dashboard"), emoji: "📊", to: "/dashboard" },
+  ];
 
   return (
     <motion.nav
@@ -50,13 +52,14 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <LanguageToggle />
           <NotificationBell />
           <ThemeToggle />
           <button
             onClick={() => openBooking(null)}
-            className="ripple px-4 py-2 rounded-full text-sm font-medium bg-gradient-gold text-foreground hover:scale-105 transition-transform shadow-[0_8px_24px_-8px_hsl(var(--accent)/0.7)]"
+            className="ripple px-4 py-2 rounded-full text-sm font-medium bg-gradient-gold text-foreground hover:scale-105 transition-transform shadow-[0_8px_24px_-8px_hsl(var(--accent)/0.7)] hidden sm:inline-flex"
           >
-            Book now
+            {t("nav.bookNow")}
           </button>
         </div>
       </div>
