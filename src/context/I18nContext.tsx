@@ -27,7 +27,7 @@ const dict = {
     "founders.kicker": "— THE MINDS BEHIND —",
     "founders.title1": "Built by founders who",
     "founders.title2": "believe in the vision.",
-    "founders.subtitle": "Two builders, one shared mission — to reshape how India experiences healthcare.",
+    "founders.subtitle": "Three builders, one shared mission — to reshape how India experiences healthcare.",
     "founders.story.kicker": "— THE FOUNDER STORY —",
     "founders.story": '"Dhanvantara AI was born from a shared vision to combine healthcare and technology in a meaningful way."',
     "founders.vision": "This is not just a project — it's the foundation of a future healthcare ecosystem.",

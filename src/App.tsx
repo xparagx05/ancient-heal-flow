@@ -9,6 +9,7 @@ import { I18nProvider } from "@/context/I18nContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import BookingModal from "@/components/dhanvantara/BookingModal";
 import VideoComingSoon from "@/components/dhanvantara/VideoComingSoon";
+import PreLoader from "@/components/dhanvantara/PreLoader";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
@@ -36,6 +37,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <PreLoader />
             <BrowserRouter>
               <BookingProvider>
                 <Routes>

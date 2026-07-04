@@ -6,17 +6,20 @@ import rupaliImg from "@/assets/founder-rupali.jpg";
 
 type FounderData = {
   name: string;
-  image: string;
+  image: string | null;
+  initials: string;
   tagline: string;
   bio: string;
   accent: string;
   role: string;
+  premium?: boolean;
 };
 
 const founders: FounderData[] = [
   {
     name: "Vaibhav Thite",
     image: vaibhavImg,
+    initials: "VT",
     role: "Co-Founder",
     tagline: "Turning ideas into real-world digital solutions.",
     bio: "A driven BCA student focused on building practical digital systems with strong interest in web development, automation, and real-world problem solving.",
@@ -25,10 +28,21 @@ const founders: FounderData[] = [
   {
     name: "Rupali Singh",
     image: rupaliImg,
+    initials: "RS",
     role: "Co-Founder",
     tagline: "Designing experiences that are simple, functional, and impactful.",
     bio: "A web developer focused on clean UI/UX, responsive design, and improving user experience through real-world projects and collaboration.",
     accent: "from-rose-200 via-amber-200 to-violet-300",
+  },
+  {
+    name: "Parag Sanjay Marathe",
+    image: null,
+    initials: "PM",
+    role: "Co-Founder",
+    tagline: "Someone trying to turn inner chaos into meaningful impact.",
+    bio: "A thinker and builder driven by the belief that quiet purpose can shape loud outcomes — bringing clarity, empathy, and momentum to everything Dhanvantara touches.",
+    accent: "from-amber-300 via-orange-300 to-rose-300",
+    premium: true,
   },
 ];
 
@@ -71,22 +85,46 @@ function FounderCard({ founder, index }: { founder: FounderData; index: number }
 
         <div className="relative glass rounded-[2rem] p-8 md:p-10 overflow-hidden">
           <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full bg-gradient-to-br ${founder.accent} opacity-30 blur-3xl`} />
-          <div className="absolute top-6 right-6 text-[10px] tracking-[0.3em] text-muted-foreground">
-            {founder.role.toUpperCase()}
+
+          {founder.premium && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full bg-accent/70"
+                  style={{ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%` }}
+                  animate={{ y: [0, -14, 0], opacity: [0.2, 0.9, 0.2] }}
+                  transition={{ duration: 3 + (i % 3), repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="absolute top-6 right-6 flex items-center gap-2">
+            {founder.premium && (
+              <span className="text-[9px] tracking-[0.25em] px-2 py-0.5 rounded-full bg-gradient-gold text-foreground/90">FOUNDER</span>
+            )}
+            <span className="text-[10px] tracking-[0.3em] text-muted-foreground">{founder.role.toUpperCase()}</span>
           </div>
 
-          {/* Avatar — real image */}
+          {/* Avatar */}
           <div className="relative mb-8">
             <div className={`absolute -inset-2 rounded-full bg-gradient-to-br ${founder.accent} opacity-40 blur-xl group-hover:opacity-80 transition-opacity duration-500`} />
             <div className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-white/70 shadow-xl group-hover:scale-105 transition-transform duration-500">
-              <img
-                src={founder.image}
-                alt={`${founder.name} — ${founder.role}`}
-                loading="lazy"
-                width={256}
-                height={256}
-                className="w-full h-full object-cover"
-              />
+              {founder.image ? (
+                <img
+                  src={founder.image}
+                  alt={`${founder.name} — ${founder.role}`}
+                  loading="lazy"
+                  width={256}
+                  height={256}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className={`w-full h-full grid place-items-center bg-gradient-to-br ${founder.accent}`}>
+                  <span className="font-display text-4xl text-foreground/80">{founder.initials}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -130,7 +168,7 @@ export default function Founder() {
           <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">{t("founders.subtitle")}</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 md:gap-10">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-8">
           {founders.map((f, i) => (
             <FounderCard key={f.name} founder={f} index={i} />
           ))}
