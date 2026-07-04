@@ -6,17 +6,20 @@ import rupaliImg from "@/assets/founder-rupali.jpg";
 
 type FounderData = {
   name: string;
-  image: string;
+  image: string | null;
+  initials: string;
   tagline: string;
   bio: string;
   accent: string;
   role: string;
+  premium?: boolean;
 };
 
 const founders: FounderData[] = [
   {
     name: "Vaibhav Thite",
     image: vaibhavImg,
+    initials: "VT",
     role: "Co-Founder",
     tagline: "Turning ideas into real-world digital solutions.",
     bio: "A driven BCA student focused on building practical digital systems with strong interest in web development, automation, and real-world problem solving.",
@@ -25,10 +28,21 @@ const founders: FounderData[] = [
   {
     name: "Rupali Singh",
     image: rupaliImg,
+    initials: "RS",
     role: "Co-Founder",
     tagline: "Designing experiences that are simple, functional, and impactful.",
     bio: "A web developer focused on clean UI/UX, responsive design, and improving user experience through real-world projects and collaboration.",
     accent: "from-rose-200 via-amber-200 to-violet-300",
+  },
+  {
+    name: "Parag Sanjay Marathe",
+    image: null,
+    initials: "PM",
+    role: "Co-Founder",
+    tagline: "Someone trying to turn inner chaos into meaningful impact.",
+    bio: "A thinker and builder driven by the belief that quiet purpose can shape loud outcomes — bringing clarity, empathy, and momentum to everything Dhanvantara touches.",
+    accent: "from-amber-300 via-orange-300 to-rose-300",
+    premium: true,
   },
 ];
 
