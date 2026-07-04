@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Bot, Calendar, Video, FileText, ShieldCheck, Sparkles } from "lucide-react";
-import type { ReactNode, MouseEvent } from "react";
+import { Bot, Calendar, Video, FileText, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
+import { useState, type ReactNode, type MouseEvent } from "react";
+import FeatureModal, { featureDetails } from "./FeatureModal";
 
 const features = [
   { icon: Bot, title: "AI Health Assistant", desc: "24/7 intelligent triage that listens, learns, and guides you to the right care.", color: "from-violet-400/40 to-blue-400/40" },
@@ -37,6 +38,9 @@ function TiltCard({ children }: { children: ReactNode }) {
 }
 
 export default function Features() {
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const detail = openKey ? featureDetails[openKey] ?? null : null;
+
   return (
     <section id="features" className="relative py-32 px-6">
       <div className="container mx-auto max-w-6xl">
@@ -66,21 +70,27 @@ export default function Features() {
               transition={{ duration: 0.6, delay: i * 0.08 }}
             >
               <TiltCard>
-                <div className="group glass rounded-3xl p-7 h-full hover:shadow-[0_30px_70px_-20px_hsl(var(--primary)/0.4)] transition-all duration-500 hover:-translate-y-1">
+                <div className="group glass rounded-3xl p-7 h-full hover:shadow-[0_30px_70px_-20px_hsl(var(--primary)/0.4)] transition-all duration-500 hover:-translate-y-1 flex flex-col">
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.color} grid place-items-center mb-5 group-hover:scale-110 transition-transform`}>
                     <f.icon className="w-6 h-6 text-foreground" />
                   </div>
                   <h3 className="font-display text-2xl mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-                  <div className="mt-6 inline-flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    Learn more →
-                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">{f.desc}</p>
+                  <button
+                    onClick={() => setOpenKey(f.title)}
+                    className="mt-6 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:gap-2.5 transition-all self-start group/btn"
+                  >
+                    Learn more
+                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                  </button>
                 </div>
               </TiltCard>
             </motion.div>
           ))}
         </div>
       </div>
+
+      <FeatureModal detail={detail} onClose={() => setOpenKey(null)} />
     </section>
   );
 }
