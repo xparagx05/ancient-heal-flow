@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Calendar, Clock, Phone, Stethoscope } from "lucide-react";
+import { X, Calendar, Clock, Phone, Stethoscope, User, Mail } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
 
 const doctors = [
