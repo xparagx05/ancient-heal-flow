@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Calendar, Clock, Phone, Stethoscope } from "lucide-react";
+import { X, Calendar, Clock, Phone, Stethoscope, User, Mail } from "lucide-react";
 import { useBooking } from "@/context/BookingContext";
 
 const doctors = [
@@ -20,6 +20,8 @@ export default function BookingModal() {
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [time, setTime] = useState(slots[0]);
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   if (!bookingDoctor) return null;
 
@@ -29,6 +31,8 @@ export default function BookingModal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!name.trim()) { alert("Please enter your full name."); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { alert("Please enter a valid email."); return; }
     if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) {
       alert("Please enter a valid 10-digit phone number.");
       return;
@@ -39,16 +43,18 @@ export default function BookingModal() {
       date,
       time,
       phone,
+      name: name.trim(),
+      email: email.trim(),
       amount: selectedDoc.price,
     });
     closeBooking();
-    setPhone("");
+    setPhone(""); setName(""); setEmail("");
     navigate(`/payment/${appt.id}`);
   }
 
   function handleClose() {
     closeBooking();
-    setTimeout(() => setPhone(""), 300);
+    setTimeout(() => { setPhone(""); setName(""); setEmail(""); }, 300);
   }
 
   return (
@@ -121,14 +127,37 @@ export default function BookingModal() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><User className="w-3 h-3" /> Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Priya Sharma"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98765 43210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone Number</label>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" /> Email (for confirmation & receipt)</label>
               <input
-                type="tel"
-                inputMode="numeric"
-                placeholder="98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
