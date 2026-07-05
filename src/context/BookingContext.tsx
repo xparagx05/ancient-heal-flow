@@ -30,7 +30,7 @@ export type Notification = {
 type Ctx = {
   appointments: Appointment[];
   addAppointment: (a: Omit<Appointment, "id" | "createdAt" | "status">) => Appointment;
-  markPaid: (id: string) => void;
+  markPaid: (id: string, meta?: { paymentId?: string; orderId?: string; receiptId?: string }) => void;
   cancelAppointment: (id: string) => void;
   rescheduleAppointment: (id: string, date: string, time: string) => void;
 
