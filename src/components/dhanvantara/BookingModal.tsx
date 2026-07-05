@@ -127,14 +127,37 @@ export default function BookingModal() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><User className="w-3 h-3" /> Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Priya Sharma"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="98765 43210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" /> Phone Number</label>
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" /> Email (for confirmation & receipt)</label>
               <input
-                type="tel"
-                inputMode="numeric"
-                placeholder="98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 w-full px-4 py-3 rounded-2xl bg-background/60 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
