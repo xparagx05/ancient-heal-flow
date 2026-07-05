@@ -107,10 +107,13 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     return appt;
   };
 
-  const markPaid = (id: string) => {
+  const markPaid: Ctx["markPaid"] = (id, meta) => {
     let appt: Appointment | undefined;
     setAppointments((prev) => prev.map((a) => {
-      if (a.id === id) { appt = { ...a, status: "paid" }; return appt; }
+      if (a.id === id) {
+        appt = { ...a, status: "paid", ...(meta || {}) };
+        return appt;
+      }
       return a;
     }));
     if (appt) {
@@ -121,7 +124,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       });
       pushNotification({
         title: "Receipt emailed",
-        message: `📩 Receipt for ₹${appt.amount} has been sent to your email.`,
+        message: `📩 Receipt for ₹${appt.amount} has been sent to ${appt.email || "your email"}.`,
         channel: "email",
       });
     }
