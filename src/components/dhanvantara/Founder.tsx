@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useI18n } from "@/context/I18nContext";
 import vaibhavImg from "@/assets/founder-vaibhav.jpg";
 import rupaliImg from "@/assets/founder-rupali.jpg";
+import paragImg from "@/assets/founder-parag.jpg";
 
 type FounderData = {
   name: string;
