@@ -175,6 +175,50 @@ export default function Founder() {
           ))}
         </div>
 
+        {/* Founder's Note from Parag */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.8 }}
+          className="mt-16 relative max-w-3xl mx-auto text-center"
+        >
+          <div className="absolute -inset-6 rounded-[2rem] bg-gradient-gold opacity-10 blur-3xl pointer-events-none" />
+          <div className="relative glass rounded-[2rem] p-10 md:p-12 overflow-hidden">
+            <p className="text-[10px] tracking-[0.4em] text-primary mb-4">FOUNDER'S NOTE</p>
+            <p className="font-display text-2xl md:text-3xl leading-snug text-gradient italic">
+              "Technology should never replace compassion. It should amplify it."
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Every great innovation begins with a simple decision — to care.
+            </p>
+            <p className="mt-3 text-xs tracking-[0.3em] text-muted-foreground">— PARAG SANJAY MARATHE</p>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {[
+                { e: "✨", t: "Vision" },
+                { e: "🚀", t: "Innovation" },
+                { e: "❤️", t: "Impact" },
+              ].map((c, i) => (
+                <motion.span
+                  key={c.t}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2 + i * 0.1 }}
+                  whileHover={{ y: -3, boxShadow: "0 0 24px hsl(var(--accent)/0.5)" }}
+                  className="px-5 py-2 rounded-full glass text-sm font-medium flex items-center gap-2 cursor-default"
+                >
+                  <span>{c.e}</span>
+                  <span>{c.t}</span>
+                </motion.span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
