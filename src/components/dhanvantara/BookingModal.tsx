@@ -20,6 +20,8 @@ export default function BookingModal() {
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [time, setTime] = useState(slots[0]);
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   if (!bookingDoctor) return null;
 
@@ -29,6 +31,8 @@ export default function BookingModal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!name.trim()) { alert("Please enter your full name."); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { alert("Please enter a valid email."); return; }
     if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) {
       alert("Please enter a valid 10-digit phone number.");
       return;
@@ -39,16 +43,18 @@ export default function BookingModal() {
       date,
       time,
       phone,
+      name: name.trim(),
+      email: email.trim(),
       amount: selectedDoc.price,
     });
     closeBooking();
-    setPhone("");
+    setPhone(""); setName(""); setEmail("");
     navigate(`/payment/${appt.id}`);
   }
 
   function handleClose() {
     closeBooking();
-    setTimeout(() => setPhone(""), 300);
+    setTimeout(() => { setPhone(""); setName(""); setEmail(""); }, 300);
   }
 
   return (
