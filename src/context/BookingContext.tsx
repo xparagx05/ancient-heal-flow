@@ -8,9 +8,14 @@ export type Appointment = {
   date: string;
   time: string;
   phone: string;
+  name?: string;
+  email?: string;
   amount: number;
   status: "pending" | "paid" | "cancelled" | "completed";
   createdAt: string;
+  paymentId?: string;
+  orderId?: string;
+  receiptId?: string;
 };
 
 export type Notification = {
