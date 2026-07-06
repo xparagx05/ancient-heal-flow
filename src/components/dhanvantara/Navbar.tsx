@@ -37,19 +37,26 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1 text-sm">
+        <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
             <Link
               key={l.label}
               to={l.to}
-              className="relative px-3.5 py-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors group"
+              style={{
+                fontFamily: "'Cormorant Garamond', 'Playfair Display', 'Libre Baskerville', serif",
+                fontWeight: 600,
+                fontSize: "17px",
+                letterSpacing: "0.4px",
+              }}
+              className="relative px-4 py-1.5 rounded-full text-foreground/75 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[hsl(42_95%_55%)] hover:via-[hsl(42_80%_75%)] hover:to-[hsl(45_60%_92%)] transition-all duration-300 group"
             >
-              <span className="mr-1.5">{l.emoji}</span>
-              {l.label}
-              <span className="absolute left-3.5 right-3.5 -bottom-0.5 h-px bg-gradient-to-r from-accent to-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
+              <span className="mr-1.5 text-sm align-middle">{l.emoji}</span>
+              <span className="align-middle">{l.label}</span>
+              <span className="absolute left-4 right-4 -bottom-0.5 h-px bg-gradient-to-r from-accent to-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
             </Link>
           ))}
         </div>
+
 
         <div className="flex items-center gap-1.5">
           <LanguageToggle />
