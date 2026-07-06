@@ -234,15 +234,24 @@ function HeroPanel({ f }: { f: FounderData }) {
   );
 }
 
-/* ---------------- Tall (Vaibhav) ---------------- */
-function TallPanel({ f }: { f: FounderData }) {
+/* ---------------- Co-Founder card (shared component) ---------------- */
+function CoFounderCard({ f }: { f: FounderData }) {
   return (
-    <Panel founder={f} className="md:col-span-5 min-h-[560px]">
+    <Panel founder={f} className="md:col-span-6 min-h-[560px]">
       <div className="relative h-full flex flex-col">
         {/* Image portion */}
         <div className="relative h-[300px] overflow-hidden">
           <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-40`} />
-          <img src={f.image} alt={f.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-[1200ms]" />
+          <motion.img
+            src={f.image}
+            alt={f.name}
+            loading="lazy"
+            initial={{ scale: 1.08 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4 }}
+            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[1200ms]"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
           <motion.div
@@ -260,74 +269,16 @@ function TallPanel({ f }: { f: FounderData }) {
         </div>
 
         {/* Content */}
-        <div className="relative flex-1 p-8 -mt-4">
+        <div className="relative flex-1 p-8 -mt-4 flex flex-col">
           <p className="text-[10px] tracking-[0.4em] text-primary mb-3">{f.role.toUpperCase()}</p>
           <h3 className="font-display text-4xl leading-tight">
             {f.first} <span className="text-gradient italic">{f.last}</span>
           </h3>
           <p className="mt-4 text-sm italic text-foreground/70">"{f.tagline}"</p>
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{f.bio}</p>
-          <div className="mt-6">
+          <div className="mt-auto pt-6">
             <Chips items={f.chips} glow={f.glow} />
           </div>
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-/* ---------------- Wide (Rupali) ---------------- */
-function WidePanel({ f }: { f: FounderData }) {
-  return (
-    <Panel founder={f} className="md:col-span-7 min-h-[560px]">
-      <div className="grid md:grid-cols-2 h-full">
-        {/* Content first */}
-        <div className="relative p-8 md:p-10 flex flex-col justify-between order-2 md:order-1">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-[10px] tracking-[0.4em] text-primary">{f.role.toUpperCase()}</span>
-              <span className="w-8 h-[1px] bg-gradient-to-r from-primary/60 to-transparent" />
-              <span className="font-display text-4xl text-foreground/15 leading-none">{f.index}</span>
-            </div>
-
-            <h3 className="font-display text-4xl md:text-5xl leading-[0.95]">
-              {f.first}
-              <br />
-              <span className="text-gradient italic">{f.last}</span>
-            </h3>
-
-            <p className="mt-5 text-sm md:text-base italic text-foreground/80">"{f.tagline}"</p>
-            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{f.bio}</p>
-          </div>
-
-          <div className="mt-8">
-            <Chips items={f.chips} glow={f.glow} />
-          </div>
-        </div>
-
-        {/* Image with overhang */}
-        <div className="relative min-h-[280px] md:min-h-full order-1 md:order-2 overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-40`} />
-          <motion.img
-            src={f.image}
-            alt={f.name}
-            loading="lazy"
-            initial={{ scale: 1.08 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4 }}
-            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[1200ms]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/40 md:to-background/20" />
-
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="absolute top-5 right-5 px-3 py-1.5 rounded-full backdrop-blur-xl bg-black/40 border border-white/20"
-          >
-            <span className="text-[10px] tracking-[0.35em] text-white/90">◆ {f.label}</span>
-          </motion.div>
         </div>
       </div>
     </Panel>
@@ -384,8 +335,8 @@ export default function Founder() {
         {/* Asymmetric bento grid */}
         <div className="grid md:grid-cols-12 gap-6 md:gap-8">
           <HeroPanel f={founders[0]} />
-          <TallPanel f={founders[1]} />
-          <WidePanel f={founders[2]} />
+          <CoFounderCard f={founders[1]} />
+          <CoFounderCard f={founders[2]} />
         </div>
 
         {/* Founder's note strip */}
