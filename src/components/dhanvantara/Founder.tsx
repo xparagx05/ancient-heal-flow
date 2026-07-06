@@ -335,8 +335,8 @@ export default function Founder() {
         {/* Asymmetric bento grid */}
         <div className="grid md:grid-cols-12 gap-6 md:gap-8">
           <HeroPanel f={founders[0]} />
-          <TallPanel f={founders[1]} />
-          <WidePanel f={founders[2]} />
+          <CoFounderCard f={founders[1]} />
+          <CoFounderCard f={founders[2]} />
         </div>
 
         {/* Founder's note strip */}
