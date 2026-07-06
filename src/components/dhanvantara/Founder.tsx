@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { useI18n } from "@/context/I18nContext";
 import vaibhavImg from "@/assets/founder-vaibhav.jpg";
 import rupaliImg from "@/assets/founder-rupali.jpg";
@@ -7,234 +7,410 @@ import paragImg from "@/assets/founder-parag.jpg";
 
 type FounderData = {
   name: string;
-  image: string | null;
-  initials: string;
+  first: string;
+  last: string;
+  image: string;
+  role: string;
+  label: string;
   tagline: string;
   bio: string;
-  accent: string;
-  role: string;
-  premium?: boolean;
+  chips: string[];
+  accent: string;      // tailwind gradient
+  glow: string;        // hsl glow color
+  index: string;       // 01 / 02 / 03
+  variant: "hero" | "tall" | "wide";
 };
 
 const founders: FounderData[] = [
   {
+    name: "Parag Sanjay Marathe",
+    first: "Parag",
+    last: "Marathe",
+    image: paragImg,
+    role: "Founder",
+    label: "VISIONARY",
+    tagline: "From inner chaos to meaningful impact.",
+    bio: "One of the founding minds behind Dhanvantara AI — shaping its long-term vision, product direction, and the belief that technology should never replace compassion, only amplify it.",
+    chips: ["Vision", "Product", "Strategy", "Storytelling"],
+    accent: "from-amber-300 via-orange-400 to-rose-400",
+    glow: "42 95% 60%",
+    index: "01",
+    variant: "hero",
+  },
+  {
     name: "Vaibhav Thite",
+    first: "Vaibhav",
+    last: "Thite",
     image: vaibhavImg,
-    initials: "VT",
     role: "Co-Founder",
-    tagline: "Turning ideas into real-world digital solutions.",
+    label: "BUILDER",
+    tagline: "Turning ideas into real-world digital systems.",
     bio: "A driven BCA student focused on building practical digital systems with strong interest in web development, automation, and real-world problem solving.",
-    accent: "from-violet-300 via-indigo-300 to-blue-300",
+    chips: ["Engineering", "Automation", "Web"],
+    accent: "from-indigo-400 via-blue-400 to-cyan-400",
+    glow: "220 90% 60%",
+    index: "02",
+    variant: "tall",
   },
   {
     name: "Rupali Singh",
+    first: "Rupali",
+    last: "Singh",
     image: rupaliImg,
-    initials: "RS",
     role: "Co-Founder",
-    tagline: "Designing experiences that are simple, functional, and impactful.",
+    label: "DESIGNER",
+    tagline: "Simple. Functional. Impactful.",
     bio: "A web developer focused on clean UI/UX, responsive design, and improving user experience through real-world projects and collaboration.",
-    accent: "from-rose-200 via-amber-200 to-violet-300",
-  },
-  {
-    name: "Parag Sanjay Marathe",
-    image: paragImg,
-    initials: "PM",
-    role: "Founder • From Chaos to Change 🌌",
-    tagline: "Someone trying to turn inner chaos into meaningful impact.",
-    bio: "One of the founding minds behind Dhanvantara AI — shaping its long-term vision, product direction, and the belief that technology should never replace compassion, only amplify it.",
-    accent: "from-amber-300 via-orange-300 to-rose-300",
-    premium: true,
+    chips: ["Design", "UI/UX", "Frontend"],
+    accent: "from-rose-300 via-fuchsia-400 to-violet-400",
+    glow: "320 85% 65%",
+    index: "03",
+    variant: "wide",
   },
 ];
 
-function FounderCard({ founder, index }: { founder: FounderData; index: number }) {
+/* ---------------- Particle field ---------------- */
+function Particles({ glow, count = 14 }: { glow: string; count?: number }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {Array.from({ length: count }).map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: `${(i * 41) % 100}%`,
+            top: `${(i * 67) % 100}%`,
+            width: `${2 + (i % 3)}px`,
+            height: `${2 + (i % 3)}px`,
+            background: `hsl(${glow} / 0.7)`,
+            boxShadow: `0 0 10px hsl(${glow} / 0.9)`,
+          }}
+          animate={{ y: [0, -18, 0], opacity: [0.15, 0.9, 0.15] }}
+          transition={{ duration: 4 + (i % 4), repeat: Infinity, delay: i * 0.25, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- Floating chips ---------------- */
+function Chips({ items, glow }: { items: string[]; glow: string }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((c, i) => (
+        <motion.span
+          key={c}
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.15 + i * 0.08, duration: 0.5 }}
+          whileHover={{ y: -3 }}
+          className="relative px-3 py-1 rounded-full text-[11px] tracking-wider font-medium backdrop-blur-xl border border-white/30 bg-white/40 dark:bg-white/5"
+          style={{ boxShadow: `0 4px 20px hsl(${glow} / 0.25)` }}
+        >
+          <span className="relative z-10">{c}</span>
+          <span
+            className="absolute inset-0 rounded-full opacity-0 hover:opacity-100 transition-opacity"
+            style={{ background: `radial-gradient(circle at 50% 50%, hsl(${glow} / 0.25), transparent 70%)` }}
+          />
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- Panel shell ---------------- */
+function Panel({
+  founder,
+  className = "",
+  children,
+}: {
+  founder: FounderData;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  const handleMove = (e: React.MouseEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    setTilt({ x: -py * 8, y: px * 8 });
-  };
-
-  const reset = () => setTilt({ x: 0, y: 0 });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   return (
     <motion.div
+      ref={ref}
+      style={{ y }}
       initial={{ opacity: 0, y: 60 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.8, delay: index * 0.15, ease: [0.22, 1, 0.36, 1] }}
-      className="[perspective:1200px]"
+      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      className={`group relative ${className}`}
     >
+      {/* Ambient glow */}
       <div
-        ref={ref}
-        onMouseMove={handleMove}
-        onMouseLeave={reset}
-        style={{
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-          transition: "transform 250ms cubic-bezier(0.22,1,0.36,1)",
-        }}
-        className="relative group"
-      >
-        <div
-          className={`absolute -inset-1 rounded-[2rem] bg-gradient-to-br ${founder.accent} opacity-0 group-hover:opacity-60 blur-2xl transition-opacity duration-500`}
-        />
-
-        <div className="relative glass rounded-[2rem] p-8 md:p-10 overflow-hidden">
-          <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full bg-gradient-to-br ${founder.accent} opacity-30 blur-3xl`} />
-
-          {founder.premium && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <motion.span
-                  key={i}
-                  className="absolute w-1 h-1 rounded-full bg-accent/70"
-                  style={{ left: `${(i * 37) % 100}%`, top: `${(i * 53) % 100}%` }}
-                  animate={{ y: [0, -14, 0], opacity: [0.2, 0.9, 0.2] }}
-                  transition={{ duration: 3 + (i % 3), repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="absolute top-6 right-6 flex items-center gap-2">
-            {founder.premium && (
-              <span className="text-[9px] tracking-[0.25em] px-2 py-0.5 rounded-full bg-gradient-gold text-foreground/90">FOUNDER</span>
-            )}
-            <span className="text-[10px] tracking-[0.3em] text-muted-foreground">{founder.role.toUpperCase()}</span>
-          </div>
-
-          {/* Avatar */}
-          <div className="relative mb-8">
-            <div className={`absolute -inset-2 rounded-full bg-gradient-to-br ${founder.accent} opacity-40 blur-xl group-hover:opacity-80 transition-opacity duration-500`} />
-            <div className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-white/70 shadow-xl group-hover:scale-105 transition-transform duration-500">
-              {founder.image ? (
-                <img
-                  src={founder.image}
-                  alt={`${founder.name} — ${founder.role}`}
-                  loading="lazy"
-                  width={256}
-                  height={256}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className={`w-full h-full grid place-items-center bg-gradient-to-br ${founder.accent}`}>
-                  <span className="font-display text-4xl text-foreground/80">{founder.initials}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <h3 className="font-display text-3xl md:text-4xl leading-tight">{founder.name}</h3>
-          <p className="mt-3 text-base italic text-gradient font-medium">"{founder.tagline}"</p>
-          <p className="mt-5 text-sm md:text-base text-muted-foreground leading-relaxed">{founder.bio}</p>
-
-          <div className="mt-8 pt-6 border-t border-white/30 flex items-center justify-between">
-            <span className="text-xs tracking-[0.25em] text-muted-foreground">DHANVANTARA AI</span>
-            <div className="flex gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/20" />
-            </div>
-          </div>
-        </div>
+        aria-hidden
+        className="absolute -inset-6 rounded-[2.5rem] opacity-40 group-hover:opacity-90 blur-3xl transition-opacity duration-700"
+        style={{ background: `radial-gradient(60% 60% at 50% 40%, hsl(${founder.glow} / 0.45), transparent 70%)` }}
+      />
+      {/* Gradient border */}
+      <div className={`absolute inset-0 rounded-[2rem] p-[1px] bg-gradient-to-br ${founder.accent} opacity-60 group-hover:opacity-100 transition-opacity`}>
+        <div className="w-full h-full rounded-[2rem] bg-background/70 backdrop-blur-2xl" />
+      </div>
+      {/* Content */}
+      <div className="relative rounded-[2rem] overflow-hidden border border-white/40 dark:border-white/10">
+        <Particles glow={founder.glow} />
+        {children}
       </div>
     </motion.div>
   );
 }
 
+/* ---------------- Hero (Parag) ---------------- */
+function HeroPanel({ f }: { f: FounderData }) {
+  return (
+    <Panel founder={f} className="md:col-span-12 md:row-span-2 min-h-[520px]">
+      <div className="grid md:grid-cols-5 gap-0 h-full">
+        {/* Left: image overhang */}
+        <div className="relative md:col-span-2 min-h-[380px] md:min-h-full overflow-visible">
+          <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-30`} />
+          <motion.img
+            src={f.image}
+            alt={f.name}
+            loading="lazy"
+            initial={{ scale: 1.05 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/60" />
+
+          {/* Floating label */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="absolute top-6 left-6 px-3 py-1.5 rounded-full backdrop-blur-xl bg-black/40 border border-white/20"
+          >
+            <span className="text-[10px] tracking-[0.35em] text-white/90">◆ {f.label}</span>
+          </motion.div>
+
+          <div className="absolute bottom-6 left-6 text-white/95 drop-shadow-lg">
+            <p className="text-[10px] tracking-[0.4em] opacity-80">{f.index} / 03</p>
+            <p className="font-display text-2xl leading-none mt-2">{f.first}</p>
+          </div>
+        </div>
+
+        {/* Right: content */}
+        <div className="relative md:col-span-3 p-8 md:p-12 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-[10px] tracking-[0.4em] text-primary">FOUNDER'S NOTE</span>
+              <span className="text-[9px] tracking-[0.3em] px-2 py-0.5 rounded-full bg-gradient-gold text-foreground/90">FOUNDER</span>
+            </div>
+
+            <h3 className="font-display text-5xl md:text-6xl leading-[0.95] tracking-tight">
+              {f.first}
+              <br />
+              <span className="text-gradient italic">{f.last}</span>
+            </h3>
+
+            <p className="mt-6 text-base md:text-lg leading-relaxed text-foreground/80 max-w-md">
+              "{f.tagline}"
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground max-w-md leading-relaxed">
+              {f.bio}
+            </p>
+          </div>
+
+          <div className="mt-8 space-y-5">
+            <Chips items={f.chips} glow={f.glow} />
+            <div className="flex items-center gap-3 pt-4 border-t border-white/20">
+              <div className="w-8 h-[1px] bg-gradient-to-r from-primary to-transparent" />
+              <span className="text-[10px] tracking-[0.3em] text-muted-foreground">DHANVANTARA · EST 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* ---------------- Tall (Vaibhav) ---------------- */
+function TallPanel({ f }: { f: FounderData }) {
+  return (
+    <Panel founder={f} className="md:col-span-5 min-h-[560px]">
+      <div className="relative h-full flex flex-col">
+        {/* Image portion */}
+        <div className="relative h-[300px] overflow-hidden">
+          <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-40`} />
+          <img src={f.image} alt={f.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-[1200ms]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="absolute top-5 right-5 px-3 py-1.5 rounded-full backdrop-blur-xl bg-black/40 border border-white/20"
+          >
+            <span className="text-[10px] tracking-[0.35em] text-white/90">◆ {f.label}</span>
+          </motion.div>
+
+          <div className="absolute top-5 left-5">
+            <span className="font-display text-6xl text-white/20 leading-none">{f.index}</span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="relative flex-1 p-8 -mt-4">
+          <p className="text-[10px] tracking-[0.4em] text-primary mb-3">{f.role.toUpperCase()}</p>
+          <h3 className="font-display text-4xl leading-tight">
+            {f.first} <span className="text-gradient italic">{f.last}</span>
+          </h3>
+          <p className="mt-4 text-sm italic text-foreground/70">"{f.tagline}"</p>
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{f.bio}</p>
+          <div className="mt-6">
+            <Chips items={f.chips} glow={f.glow} />
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/* ---------------- Wide (Rupali) ---------------- */
+function WidePanel({ f }: { f: FounderData }) {
+  return (
+    <Panel founder={f} className="md:col-span-7 min-h-[560px]">
+      <div className="grid md:grid-cols-2 h-full">
+        {/* Content first */}
+        <div className="relative p-8 md:p-10 flex flex-col justify-between order-2 md:order-1">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-[10px] tracking-[0.4em] text-primary">{f.role.toUpperCase()}</span>
+              <span className="w-8 h-[1px] bg-gradient-to-r from-primary/60 to-transparent" />
+              <span className="font-display text-4xl text-foreground/15 leading-none">{f.index}</span>
+            </div>
+
+            <h3 className="font-display text-4xl md:text-5xl leading-[0.95]">
+              {f.first}
+              <br />
+              <span className="text-gradient italic">{f.last}</span>
+            </h3>
+
+            <p className="mt-5 text-sm md:text-base italic text-foreground/80">"{f.tagline}"</p>
+            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{f.bio}</p>
+          </div>
+
+          <div className="mt-8">
+            <Chips items={f.chips} glow={f.glow} />
+          </div>
+        </div>
+
+        {/* Image with overhang */}
+        <div className="relative min-h-[280px] md:min-h-full order-1 md:order-2 overflow-hidden">
+          <div className={`absolute inset-0 bg-gradient-to-br ${f.accent} opacity-40`} />
+          <motion.img
+            src={f.image}
+            alt={f.name}
+            loading="lazy"
+            initial={{ scale: 1.08 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4 }}
+            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[1200ms]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/40 md:to-background/20" />
+
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="absolute top-5 right-5 px-3 py-1.5 rounded-full backdrop-blur-xl bg-black/40 border border-white/20"
+          >
+            <span className="text-[10px] tracking-[0.35em] text-white/90">◆ {f.label}</span>
+          </motion.div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 export default function Founder() {
   const { t } = useI18n();
-  return (
-    <section id="founders" className="py-32 px-6 relative">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)] pointer-events-none" />
 
-      <div className="container mx-auto max-w-6xl relative">
+  return (
+    <section id="founders" className="relative py-32 px-6 overflow-hidden">
+      {/* Ambient background orbs */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <motion.div
+          animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 left-[10%] w-[420px] h-[420px] rounded-full blur-3xl opacity-30"
+          style={{ background: "radial-gradient(circle, hsl(42 95% 65% / 0.5), transparent 70%)" }}
+        />
+        <motion.div
+          animate={{ x: [0, -40, 0], y: [0, 30, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-20 right-[8%] w-[500px] h-[500px] rounded-full blur-3xl opacity-25"
+          style={{ background: "radial-gradient(circle, hsl(220 90% 55% / 0.5), transparent 70%)" }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--foreground)/0.04)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground)/0.04)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+      </div>
+
+      <div className="container mx-auto max-w-7xl relative">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-20"
+          transition={{ duration: 0.8 }}
+          className="mb-20 md:mb-24 flex flex-col md:flex-row md:items-end md:justify-between gap-8"
         >
-          <p className="text-xs tracking-[0.4em] text-primary mb-5">{t("founders.kicker")}</p>
-          <h2 className="font-display text-5xl md:text-6xl leading-[1.05]">
-            {t("founders.title1")} <br />
-            <span className="text-gradient italic">{t("founders.title2")}</span>
-          </h2>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">{t("founders.subtitle")}</p>
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="w-10 h-[1px] bg-gradient-to-r from-primary to-transparent" />
+              <span className="text-xs tracking-[0.5em] text-primary">{t("founders.kicker")}</span>
+            </div>
+            <h2 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight">
+              The minds
+              <br />
+              <span className="text-gradient italic">behind the machine.</span>
+            </h2>
+          </div>
+          <p className="max-w-sm text-sm text-muted-foreground leading-relaxed md:text-right">
+            Three protagonists. One belief — that healthcare should feel human, even when guided by intelligence.
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 md:gap-8">
-          {founders.map((f, i) => (
-            <FounderCard key={f.name} founder={f} index={i} />
-          ))}
+        {/* Asymmetric bento grid */}
+        <div className="grid md:grid-cols-12 gap-6 md:gap-8">
+          <HeroPanel f={founders[0]} />
+          <TallPanel f={founders[1]} />
+          <WidePanel f={founders[2]} />
         </div>
 
-        {/* Founder's Note from Parag */}
+        {/* Founder's note strip */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8 }}
-          className="mt-16 relative max-w-3xl mx-auto text-center"
+          className="mt-20 relative"
         >
           <div className="absolute -inset-6 rounded-[2rem] bg-gradient-gold opacity-10 blur-3xl pointer-events-none" />
-          <div className="relative glass rounded-[2rem] p-10 md:p-12 overflow-hidden">
-            <p className="text-[10px] tracking-[0.4em] text-primary mb-4">FOUNDER'S NOTE</p>
-            <p className="font-display text-2xl md:text-3xl leading-snug text-gradient italic">
-              "Technology should never replace compassion. It should amplify it."
+          <div className="relative rounded-[2rem] p-10 md:p-14 border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/50 to-white/10 dark:from-white/5 dark:to-white/[0.02] overflow-hidden">
+            <div className="absolute top-6 right-8 text-[9px] tracking-[0.4em] text-muted-foreground">MANIFESTO / 001</div>
+            <p className="text-[10px] tracking-[0.4em] text-primary mb-6">— FOUNDER'S NOTE</p>
+            <p className="font-display text-3xl md:text-5xl leading-[1.1] max-w-4xl">
+              "Technology should never <span className="italic text-gradient">replace</span> compassion.
+              <br />
+              It should <span className="italic text-gradient">amplify</span> it."
             </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Every great innovation begins with a simple decision — to care.
-            </p>
-            <p className="mt-3 text-xs tracking-[0.3em] text-muted-foreground">— PARAG SANJAY MARATHE</p>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              {[
-                { e: "✨", t: "Vision" },
-                { e: "🚀", t: "Innovation" },
-                { e: "❤️", t: "Impact" },
-              ].map((c, i) => (
-                <motion.span
-                  key={c.t}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 + i * 0.1 }}
-                  whileHover={{ y: -3, boxShadow: "0 0 24px hsl(var(--accent)/0.5)" }}
-                  className="px-5 py-2 rounded-full glass text-sm font-medium flex items-center gap-2 cursor-default"
-                >
-                  <span>{c.e}</span>
-                  <span>{c.t}</span>
-                </motion.span>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-
-
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="mt-20 relative glass rounded-[2rem] p-10 md:p-14 text-center overflow-hidden"
-        >
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-gradient-primary opacity-20 blur-3xl" />
-
-          <div className="relative">
-            <p className="text-xs tracking-[0.4em] text-primary mb-5">{t("founders.story.kicker")}</p>
-            <p className="font-display text-2xl md:text-3xl leading-relaxed max-w-3xl mx-auto">{t("founders.story")}</p>
-
-            <div className="mt-10 inline-flex items-center gap-3 px-6 py-3 rounded-full bg-foreground/5 backdrop-blur">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm font-medium tracking-wide">{t("founders.vision")}</span>
+            <div className="mt-10 flex items-center gap-4">
+              <img src={paragImg} alt="Parag" className="w-12 h-12 rounded-full object-cover ring-2 ring-white/40" />
+              <div>
+                <p className="text-sm font-semibold">Parag Sanjay Marathe</p>
+                <p className="text-[10px] tracking-[0.3em] text-muted-foreground">FOUNDER · DHANVANTARA AI</p>
+              </div>
             </div>
           </div>
         </motion.div>
