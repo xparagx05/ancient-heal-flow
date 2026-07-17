@@ -135,7 +135,8 @@ Deno.serve(async (req) => {
 
     await admin.from("prescriptions").update({ pdf_path: path, issued_at: new Date().toISOString() }).eq("id", prescription_id);
 
-    const { data: signed } = await admin.storage.from("prescriptions").createSignedUrl(path, 60 * 60 * 24 * 7);
+    // Short-lived signed URL (5 min). Clients request a fresh URL when the user clicks download.
+    const { data: signed } = await admin.storage.from("prescriptions").createSignedUrl(path, 300);
     return json({ path, signed_url: signed?.signedUrl });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
