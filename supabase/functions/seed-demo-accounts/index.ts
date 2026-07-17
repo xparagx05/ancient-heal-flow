@@ -86,12 +86,14 @@ Deno.serve(async (req) => {
           full_name: "Dr. Aarav Mehta",
           email: docEmail,
           phone: "+91 90000 00001",
-          specialty: "General Medicine",
-          qualifications: "MBBS, MD (Internal Medicine)",
+          registration_number: "DEMO-REG-2026",
+          specialization: "General Medicine",
+          qualification: "MBBS, MD (Internal Medicine)",
           experience_years: 8,
-          license_number: "DEMO-LIC-2026",
-          bio: "Demo physician account for platform testing.",
           consultation_fee: 499,
+          languages: ["English", "Hindi"],
+          working_hours: {},
+          bio: "Demo physician account for platform testing.",
           status: "approved",
         });
       } else if (existingApp.status !== "approved") {
