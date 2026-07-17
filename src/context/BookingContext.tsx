@@ -28,7 +28,7 @@ async function syncApptToSupabase(appt: Appointment): Promise<string | null> {
       scheduled_at: scheduled.toISOString(),
       mode: "video",
       fee: appt.amount,
-      status: "scheduled",
+      status: "pending_payment",
       patient_notes: `${appt.name ?? ""} · ${appt.email ?? ""} · ${appt.phone}`,
     }).select("id").single();
     if (error) return null;
