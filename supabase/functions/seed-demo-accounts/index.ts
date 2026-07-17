@@ -110,10 +110,11 @@ Deno.serve(async (req) => {
         await supa.from("doctors").insert({
           user_id: docUserId,
           full_name: "Dr. Aarav Mehta",
-          specialty: "General Medicine",
-          qualifications: "MBBS, MD (Internal Medicine)",
+          specialization: "General Medicine",
+          qualification: "MBBS, MD (Internal Medicine)",
           experience_years: 8,
           consultation_fee: 499,
+          languages: ["English", "Hindi"],
           bio: "Demo physician account for platform testing.",
           is_active: true,
         });
