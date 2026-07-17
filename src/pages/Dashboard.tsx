@@ -152,6 +152,11 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <PatientAppointmentsCard />
+          <PatientPrescriptionsCard />
+        </div>
       </section>
 
       <Footer />
