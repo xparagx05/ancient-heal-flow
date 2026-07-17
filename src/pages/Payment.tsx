@@ -47,6 +47,7 @@ export default function PaymentPage() {
         prefill: { name: appt.name, email: appt.email, contact: appt.phone },
         notes: { appointmentId: appt.id, doctor: appt.doctor, date: appt.date, time: appt.time },
         theme: { color: "#C9A24A" },
+        appointmentId: appt.supaId,
       });
       setPaymentId(res.razorpay_payment_id);
       setOrderId(res.razorpay_order_id);
