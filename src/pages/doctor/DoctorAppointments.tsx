@@ -124,10 +124,36 @@ export default function DoctorAppointments() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${statusTint(r.status)}`}>
                   {r.status.replace("_", " ")}
                 </span>
+                {(r.status === "pending_payment" || r.status === "confirmed") && (
+                  <>
+                    {r.status === "pending_payment" && (
+                      <button
+                        onClick={() => updateStatus(r.id, "confirmed")}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+                      >
+                        <Check className="w-3 h-3" /> Accept
+                      </button>
+                    )}
+                    <button
+                      onClick={() => updateStatus(r.id, "cancelled")}
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-400 hover:bg-rose-500/25"
+                    >
+                      <X className="w-3 h-3" /> Cancel
+                    </button>
+                  </>
+                )}
+                {r.status === "in_progress" && (
+                  <button
+                    onClick={() => updateStatus(r.id, "completed")}
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 hover:bg-blue-500/25"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Complete
+                  </button>
+                )}
                 <Link
                   to={`/doctor/consultations/${r.id}`}
                   className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
@@ -135,6 +161,7 @@ export default function DoctorAppointments() {
                   Open <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
+
             </motion.div>
           ))}
         </div>
