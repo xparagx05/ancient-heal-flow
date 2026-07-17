@@ -34,27 +34,27 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.1 }}
-          className="font-display text-6xl md:text-8xl leading-[0.95] tracking-tight"
+          className="font-sans font-semibold text-6xl md:text-8xl leading-[0.9] tracking-[-0.04em]"
         >
-          Dhanvantara
+          Healthcare,
           <br />
-          <span className="italic text-gradient-gold">AI</span>
+          <span className="italic font-display font-medium text-gradient-gold tracking-tight">reimagined.</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.35 }}
-          className="mt-6 font-display italic text-xl md:text-2xl text-foreground/70"
+          className="mt-7 font-sans text-lg md:text-xl text-foreground/60 tracking-tight"
         >
-          {t("hero.tagline")}
+          Dhanvantara AI — {t("hero.tagline")}
         </motion.p>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-5 max-w-xl mx-auto text-base md:text-lg text-muted-foreground"
+          className="mt-5 max-w-xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed"
         >
           {t("hero.subtitle")}
         </motion.p>
