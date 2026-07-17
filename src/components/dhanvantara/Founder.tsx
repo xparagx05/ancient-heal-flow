@@ -19,6 +19,7 @@ type FounderData = {
   glow: string;        // hsl glow color
   index: string;       // 01 / 02 / 03
   variant: "hero" | "tall" | "wide";
+  objectPos: string;   // CSS object-position — centers each face consistently
 };
 
 const founders: FounderData[] = [
@@ -36,6 +37,7 @@ const founders: FounderData[] = [
     glow: "42 95% 60%",
     index: "01",
     variant: "hero",
+    objectPos: "center 20%",
   },
   {
     name: "Vaibhav Thite",
@@ -51,6 +53,7 @@ const founders: FounderData[] = [
     glow: "220 90% 60%",
     index: "02",
     variant: "tall",
+    objectPos: "center 18%",
   },
   {
     name: "Rupali Singh",
@@ -66,6 +69,7 @@ const founders: FounderData[] = [
     glow: "320 85% 65%",
     index: "03",
     variant: "wide",
+    objectPos: "center 15%",
   },
 ];
 
