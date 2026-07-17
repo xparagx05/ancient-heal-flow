@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Users, Clock, Video, ArrowRight } from "lucide-react";
+import { Calendar, Users, Clock, Video, ArrowRight, Check, X, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import PortalShell from "@/components/PortalShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+
 
 const nav = [
   { to: "/doctor", label: "Overview", icon: <Calendar className="w-4 h-4" /> },
