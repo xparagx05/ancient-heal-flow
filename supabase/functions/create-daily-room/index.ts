@@ -39,7 +39,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const appointmentId = body.appointmentId as string | undefined;
-    if (!appointmentId) return json({ error: "appointmentId required" }, 400);
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!appointmentId || !UUID_RE.test(appointmentId)) return json({ error: "Valid appointmentId required" }, 400);
 
     // Service-role client for the trusted lookup / update (RLS bypass, we do our own authz).
     const svc = createClient(supabaseUrl, serviceKey);
