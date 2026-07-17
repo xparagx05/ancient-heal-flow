@@ -80,6 +80,10 @@ const App = () => (
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/unauthorized" element={<Unauthorized />} />
 
+                      {/* Video consultation (patient or doctor) */}
+                      <Route path="/consult/:appointmentId" element={<ProtectedRoute><ConsultationRoom /></ProtectedRoute>} />
+
+
                       {/* Portal entry points */}
                       <Route path="/portal/doctor" element={<DoctorPortalLogin />} />
                       <Route path="/portal/admin" element={<AdminPortalLogin />} />
