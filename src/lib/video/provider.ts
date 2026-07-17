@@ -18,7 +18,7 @@ class UnconfiguredProvider implements VideoProvider {
       "Video provider not configured. Set DAILY_API_KEY (or another provider) in backend secrets."
     );
   }
-  async getJoinUrl() {
+  async getJoinUrl(): Promise<string> {
     throw new Error("Video provider not configured.");
   }
 }
