@@ -361,6 +361,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          meta: Json
+          read_at: string | null
+          recipient_user_id: string
+          sender_user_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          meta?: Json
+          read_at?: string | null
+          recipient_user_id: string
+          sender_user_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          meta?: Json
+          read_at?: string | null
+          recipient_user_id?: string
+          sender_user_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       prescription_items: {
         Row: {
           created_at: string
