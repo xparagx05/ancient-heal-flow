@@ -1,7 +1,8 @@
 // Additive patient-facing cards. Rendered inside /dashboard without touching the existing layout.
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, FileText, Download, Video } from "lucide-react";
+import { Calendar, FileText, Download, Video, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
