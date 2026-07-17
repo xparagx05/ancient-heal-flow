@@ -167,9 +167,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       }
       return a;
     }));
-    if (appt?.supaId) {
-      markSupaAppointmentPaid(appt.supaId, meta?.paymentId);
-    }
+    // NOTE: DB row is confirmed server-side by verify-razorpay-payment.
+
     if (appt) {
 
       pushNotification({
