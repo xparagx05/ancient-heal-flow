@@ -11,15 +11,26 @@ export function PatientAppointmentsCard() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
+    const load = async () => {
       const { data } = await supabase.from("appointments")
         .select("*, doctors:doctor_id(full_name, specialization, photo_url)")
         .eq("patient_id", user.id)
         .order("scheduled_at", { ascending: true })
         .limit(5);
       setRows(data ?? []);
-    })();
+    };
+    load();
+    const ch = supabase
+      .channel(`pat-appts-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `patient_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user]);
+
 
   if (!user) return null;
   return (
