@@ -21,7 +21,10 @@ Deno.serve(async (req) => {
 
   try {
     const { prescription_id } = await req.json();
-    if (!prescription_id) return json({ error: "prescription_id required" }, 400);
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof prescription_id !== "string" || !UUID_RE.test(prescription_id)) {
+      return json({ error: "Valid prescription_id required" }, 400);
+    }
 
     // Load prescription with items + doctor + patient details
     const { data: rx, error: rxErr } = await admin
