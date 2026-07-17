@@ -12,13 +12,13 @@ export default function AdminPortalLogin() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
-  const { session, primaryRole, loading } = useAuth();
+  const { session, primaryRole, loading, rolesLoaded } = useAuth();
 
   useEffect(() => {
-    if (loading || !session) return;
+    if (loading || !session || !rolesLoaded) return;
     if (primaryRole === "admin") nav("/admin", { replace: true });
     else { toast.error("This account is not an administrator."); supabase.auth.signOut(); }
-  }, [session, primaryRole, loading, nav]);
+  }, [session, primaryRole, loading, rolesLoaded, nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

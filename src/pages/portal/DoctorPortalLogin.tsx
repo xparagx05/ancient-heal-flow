@@ -12,14 +12,14 @@ export default function DoctorPortalLogin() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
-  const { session, primaryRole, loading } = useAuth();
+  const { session, primaryRole, loading, rolesLoaded } = useAuth();
 
   useEffect(() => {
-    if (loading || !session) return;
+    if (loading || !session || !rolesLoaded) return;
     if (primaryRole === "doctor") nav("/doctor", { replace: true });
     else if (primaryRole === "admin") nav("/admin", { replace: true });
     else nav("/unauthorized", { replace: true });
-  }, [session, primaryRole, loading, nav]);
+  }, [session, primaryRole, loading, rolesLoaded, nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -9,6 +9,7 @@ type Ctx = {
   user: User | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoaded: boolean;
   hasRole: (r: AppRole) => boolean;
   primaryRole: AppRole | null;
   signOut: () => Promise<void>;
@@ -29,10 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const loadRoles = async (uid: string) => {
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
     setRoles((data?.map((r) => r.role as AppRole)) ?? []);
+    setRolesLoaded(true);
   };
 
   useEffect(() => {
@@ -40,9 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        setRolesLoaded(false);
         setTimeout(() => loadRoles(s.user.id), 0);
       } else {
         setRoles([]);
+        setRolesLoaded(true);
       }
     });
 
@@ -50,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) loadRoles(s.user.id).finally(() => setLoading(false));
-      else setLoading(false);
+      else { setRolesLoaded(true); setLoading(false); }
     });
 
     return () => sub.subscription.unsubscribe();
@@ -61,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     roles,
     loading,
+    rolesLoaded,
     hasRole: (r) => roles.includes(r),
     primaryRole: pickPrimary(roles),
     signOut: async () => { await supabase.auth.signOut(); },

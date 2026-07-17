@@ -34,29 +34,31 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.1 }}
-          className="font-sans font-semibold text-6xl md:text-8xl leading-[0.9] tracking-[-0.04em]"
+          className="font-sans font-semibold text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-[-0.035em]"
         >
-          Healthcare,
+          Before AI Learned
           <br />
-          <span className="italic font-display font-medium text-gradient-gold tracking-tight">reimagined.</span>
+          To Think,
+          <br />
+          <span className="italic font-display font-medium text-gradient-gold tracking-tight">Ayurveda Learned To Heal.</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.35 }}
-          className="mt-7 font-sans text-lg md:text-xl text-foreground/60 tracking-tight"
+          className="mt-8 font-sans text-sm md:text-base text-foreground/70 tracking-[0.18em] uppercase"
         >
-          Dhanvantara AI — {t("hero.tagline")}
+          Inspired by Dhanvantari <span className="text-accent">•</span> Built in Bharat <span className="text-accent">•</span> Designed for the World
         </motion.p>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-5 max-w-xl mx-auto text-base md:text-lg text-muted-foreground leading-relaxed"
+          className="mt-6 max-w-2xl mx-auto text-base md:text-lg text-muted-foreground leading-[1.75]"
         >
-          {t("hero.subtitle")}
+          For over 5,000 years, Indian healing has been guided by balance, compassion, and knowledge. Dhanvantara AI carries that legacy forward—combining timeless Ayurvedic philosophy with modern artificial intelligence to help people connect with trusted doctors, preserve their health journey, and experience care that is deeply human.
         </motion.p>
 
         <motion.div

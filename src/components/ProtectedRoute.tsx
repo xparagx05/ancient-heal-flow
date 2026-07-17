@@ -8,10 +8,10 @@ export default function ProtectedRoute({
   children: React.ReactNode;
   requiredRole?: AppRole;
 }) {
-  const { session, roles, loading } = useAuth();
+  const { session, roles, loading, rolesLoaded } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || (session && !rolesLoaded)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
