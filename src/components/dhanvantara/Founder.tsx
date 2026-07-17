@@ -19,6 +19,7 @@ type FounderData = {
   glow: string;        // hsl glow color
   index: string;       // 01 / 02 / 03
   variant: "hero" | "tall" | "wide";
+  objectPos: string;   // CSS object-position — centers each face consistently
 };
 
 const founders: FounderData[] = [
@@ -36,6 +37,7 @@ const founders: FounderData[] = [
     glow: "42 95% 60%",
     index: "01",
     variant: "hero",
+    objectPos: "center 20%",
   },
   {
     name: "Vaibhav Thite",
@@ -51,6 +53,7 @@ const founders: FounderData[] = [
     glow: "220 90% 60%",
     index: "02",
     variant: "tall",
+    objectPos: "center 18%",
   },
   {
     name: "Rupali Singh",
@@ -66,6 +69,7 @@ const founders: FounderData[] = [
     glow: "320 85% 65%",
     index: "03",
     variant: "wide",
+    objectPos: "center 15%",
   },
 ];
 
@@ -178,7 +182,8 @@ function HeroPanel({ f }: { f: FounderData }) {
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-700"
+            style={{ objectPosition: f.objectPos }}
+            className="absolute inset-0 w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/60" />
 
@@ -250,7 +255,8 @@ function CoFounderCard({ f }: { f: FounderData }) {
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1.4 }}
-            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[1200ms]"
+            style={{ objectPosition: f.objectPos }}
+            className="absolute inset-0 w-full h-full object-cover opacity-95 group-hover:scale-105 transition-transform duration-[1200ms]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
 
