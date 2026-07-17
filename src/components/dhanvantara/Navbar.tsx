@@ -56,7 +56,9 @@ export default function Navbar() {
               <span className="absolute left-4 right-4 -bottom-0.5 h-px bg-gradient-to-r from-accent to-primary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
             </Link>
           ))}
+          <PortalMenu />
         </div>
+
 
 
         <div className="flex items-center gap-1.5">
