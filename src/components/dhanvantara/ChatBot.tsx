@@ -154,22 +154,22 @@ export default function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.9 }}
             transition={{ type: "spring", damping: 22, stiffness: 250 }}
-            className="fixed bottom-24 right-6 z-40 w-[min(92vw,400px)] glass rounded-3xl overflow-hidden shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]"
+            className="fixed bottom-24 right-6 z-40 w-[min(92vw,400px)] rounded-3xl overflow-hidden shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)] border border-border/60 bg-card/95 backdrop-blur-xl dark:bg-card/90"
           >
-            <div className="p-4 bg-gradient-primary text-white flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/20 grid place-items-center">
-                <Sparkles className="w-4 h-4" />
+            <div className="p-4 bg-gradient-primary text-primary-foreground flex items-center gap-3 border-b border-accent/20">
+              <div className="w-9 h-9 rounded-full bg-primary-foreground/15 grid place-items-center ring-1 ring-accent/30">
+                <Sparkles className="w-4 h-4 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-display text-base">Dhanvantara AI</div>
-                <div className="text-xs opacity-80 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                <div className="text-xs opacity-90 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(var(--accent))]" />
                   {streaming ? "Thinking…" : "Online"}
                 </div>
               </div>
               <button
                 onClick={resetChat}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 grid place-items-center transition-colors"
+                className="w-8 h-8 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 grid place-items-center transition-colors"
                 aria-label="Reset conversation"
                 title="Reset conversation"
               >
@@ -177,20 +177,20 @@ export default function ChatBot() {
               </button>
             </div>
 
-            <div className="h-[420px] overflow-y-auto p-4 space-y-3 bg-white/40">
+            <div className="h-[420px] overflow-y-auto p-4 space-y-3 bg-background/60 scrollbar-thin scrollbar-thumb-border">
               {msgs.map((m, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm ${
+                  className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     m.role === "assistant"
-                      ? "bg-white text-foreground rounded-tl-sm shadow-sm"
-                      : "ml-auto bg-gradient-primary text-white rounded-tr-sm"
+                      ? "bg-secondary text-secondary-foreground rounded-tl-sm shadow-sm border border-border/50"
+                      : "ml-auto bg-gradient-primary text-primary-foreground rounded-tr-sm shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.5)]"
                   }`}
                 >
                   {m.role === "assistant" ? (
-                    <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-headings:font-display prose-a:no-underline">
+                    <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5 prose-headings:font-display prose-a:no-underline prose-strong:text-foreground">
                       <ReactMarkdown
                         components={{
                           a: ({ href, children }) => {
@@ -201,14 +201,14 @@ export default function ChatBot() {
                                 <a
                                   href={target}
                                   onClick={(e) => handleLinkClick(e, target)}
-                                  className="inline-flex items-center gap-1 mt-1 mr-1 mb-1 px-3 py-1.5 rounded-full bg-gradient-primary text-white text-xs font-medium hover:scale-105 transition-transform cursor-pointer no-underline"
+                                  className="inline-flex items-center gap-1 mt-1 mr-1 mb-1 px-3 py-1.5 rounded-full bg-gradient-primary text-primary-foreground text-xs font-medium hover:scale-105 transition-transform cursor-pointer no-underline"
                                 >
                                   {children}
                                 </a>
                               );
                             }
                             return (
-                              <a href={target} target="_blank" rel="noreferrer" className="text-primary underline">
+                              <a href={target} target="_blank" rel="noreferrer" className="text-accent underline">
                                 {children}
                               </a>
                             );
@@ -225,20 +225,20 @@ export default function ChatBot() {
               ))}
 
               {streaming && msgs[msgs.length - 1]?.role === "assistant" && !msgs[msgs.length - 1].content && (
-                <div className="bg-white px-4 py-2.5 rounded-2xl rounded-tl-sm w-fit flex gap-1 shadow-sm">
+                <div className="bg-secondary border border-border/50 px-4 py-2.5 rounded-2xl rounded-tl-sm w-fit flex gap-1 shadow-sm">
                   {[0, 1, 2].map((i) => (
                     <motion.span
                       key={i}
                       animate={{ y: [0, -4, 0] }}
                       transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-                      className="w-1.5 h-1.5 rounded-full bg-primary"
+                      className="w-1.5 h-1.5 rounded-full bg-accent"
                     />
                   ))}
                 </div>
               )}
 
               {error && (
-                <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-xl px-3 py-2">
                   {error}
                 </div>
               )}
@@ -251,7 +251,7 @@ export default function ChatBot() {
                       <button
                         key={p}
                         onClick={() => send(p)}
-                        className="px-3 py-1.5 rounded-full bg-white/80 hover:bg-white text-xs border border-white/60 transition-colors"
+                        className="px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/70 text-secondary-foreground text-xs border border-border/60 hover:border-accent/50 transition-colors"
                       >
                         {p}
                       </button>
@@ -263,7 +263,7 @@ export default function ChatBot() {
               <div ref={endRef} />
             </div>
 
-            <div className="p-3 bg-white/60 border-t border-white/40 flex gap-2">
+            <div className="p-3 bg-card/80 border-t border-border/60 flex gap-2">
               <input
                 ref={inputRef}
                 value={input}
@@ -271,12 +271,12 @@ export default function ChatBot() {
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
                 placeholder={streaming ? "Assistant is replying…" : "Ask about doctors, bookings, pricing…"}
                 disabled={streaming}
-                className="flex-1 bg-white rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
+                className="flex-1 bg-background text-foreground placeholder:text-muted-foreground rounded-full px-4 py-2 text-sm outline-none border border-border focus:ring-2 focus:ring-accent/50 focus:border-accent/50 disabled:opacity-60"
               />
               <button
                 onClick={() => send()}
                 disabled={streaming || !input.trim()}
-                className="w-10 h-10 rounded-full bg-gradient-primary text-white grid place-items-center hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                className="w-10 h-10 rounded-full bg-gradient-primary text-primary-foreground grid place-items-center hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.6)]"
                 aria-label="Send message"
               >
                 <Send className="w-4 h-4" />
