@@ -24,11 +24,20 @@ type Appt = {
   patient?: { full_name: string | null; email: string | null };
 };
 
+// Valid status transitions the doctor can drive from the appointments list.
+// Server-side triggers still handle summary creation and notifications.
+const ALLOWED_TRANSITIONS: Record<string, Array<"confirmed" | "cancelled" | "completed">> = {
+  pending_payment: ["confirmed", "cancelled"],
+  confirmed:       ["cancelled"],
+  in_progress:     ["completed", "cancelled"],
+};
+
 export default function DoctorAppointments() {
   const { user } = useAuth();
   const [tab, setTab] = useState<"today" | "upcoming" | "past">("today");
   const [rows, setRows] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -70,7 +79,17 @@ export default function DoctorAppointments() {
   }, [user, load]);
 
   async function updateStatus(id: string, status: "confirmed" | "cancelled" | "completed") {
+    if (busyId) return; // block double-clicks / concurrent transitions
+    const current = rows.find((r) => r.id === id);
+    if (!current) return;
+    const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
+    if (!allowed.includes(status)) {
+      toast.error(`Cannot move ${current.status.replace("_", " ")} → ${status}`);
+      return;
+    }
+    setBusyId(id);
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    setBusyId(null);
     if (error) { toast.error(error.message); return; }
     toast.success(
       status === "confirmed" ? "Appointment confirmed" :
@@ -78,6 +97,7 @@ export default function DoctorAppointments() {
       "Marked complete"
     );
   }
+
 
 
   return (
