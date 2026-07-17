@@ -44,14 +44,14 @@ Deno.serve(async (req) => {
       .digest('hex');
 
     // Constant-time comparison
-    let verified = false;
-    try {
-      const a = Buffer.from(expected, 'hex');
-      const b = Buffer.from(razorpay_signature as string, 'hex');
-      verified = a.length === b.length && timingSafeEqual(a, b);
-    } catch {
-      verified = false;
+    const sig = razorpay_signature as string;
+    let verified = expected.length === sig.length;
+    let diff = 0;
+    const len = Math.max(expected.length, sig.length);
+    for (let i = 0; i < len; i++) {
+      diff |= (expected.charCodeAt(i) || 0) ^ (sig.charCodeAt(i) || 0);
     }
+    verified = verified && diff === 0;
 
     return json({ verified }, verified ? 200 : 400);
   } catch (e) {
