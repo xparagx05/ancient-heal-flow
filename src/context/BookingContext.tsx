@@ -170,7 +170,11 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       }
       return a;
     }));
+    if (appt?.supaId) {
+      markSupaAppointmentPaid(appt.supaId, meta?.paymentId);
+    }
     if (appt) {
+
       pushNotification({
         title: "Payment successful",
         message: `✅ ₹${appt.amount} paid. Appointment with ${appt.doctor} confirmed at ${appt.time}, ${appt.date}.`,
