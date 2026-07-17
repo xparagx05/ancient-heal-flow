@@ -27,16 +27,23 @@ export default function FeedbackModal({
     if (!rating) { toast.error("Please select a rating"); return; }
     setSubmitting(true);
     try {
+      // Look up the doctor_user_id (the feedback table stores that, not doctor_id).
+      const { data: appt } = await supabase.from("appointments")
+        .select("doctor_user_id").eq("id", appointmentId).maybeSingle();
+
+      const parts: string[] = [];
+      if (review) parts.push(`Review: ${review}`);
+      if (suggestion) parts.push(`Suggestion: ${suggestion}`);
+      if (issue) parts.push(`Issue: ${issue}`);
+      parts.push(`Duration: ${Math.round(durationSeconds / 60)} min`);
+
       const { error } = await supabase.from("appointment_feedback").insert({
         appointment_id: appointmentId,
-        doctor_id: doctorId,
+        doctor_user_id: appt?.doctor_user_id ?? doctorId,
         patient_id: patientId,
         rating,
-        review: review || null,
-        issue: issue || null,
-        suggestion: suggestion || null,
-        duration_seconds: durationSeconds,
-      } as any);
+        comment: parts.join("\n") || null,
+      });
       if (error) throw error;
 
       // Ensure appointment flips to completed if the doctor hasn't done it yet.
@@ -48,7 +55,6 @@ export default function FeedbackModal({
       toast.success("Thank you for your feedback!");
       onClose();
     } catch (e: any) {
-      // Feedback table may not have every optional column — fall back gracefully.
       toast.error(e.message ?? "Could not submit feedback");
     } finally {
       setSubmitting(false);
