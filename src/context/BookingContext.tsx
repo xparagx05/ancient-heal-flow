@@ -140,6 +140,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setAppointments((prev) => [appt, ...prev]);
+    // Best-effort Supabase mirror (no-op when signed out or doctor row not found)
+    syncApptToSupabase(appt).then((supaId) => {
+      if (supaId) {
+        setAppointments((prev) => prev.map((x) => x.id === appt.id ? { ...x, supaId } : x));
+      }
+    });
     pushNotification({
       title: "Appointment booked",
       message: `Your appointment with ${appt.doctor} is reserved for ${appt.date} at ${appt.time}.`,
@@ -153,6 +159,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     toast.success("📩 SMS & Email sent successfully");
     return appt;
   };
+
 
   const markPaid: Ctx["markPaid"] = (id, meta) => {
     let appt: Appointment | undefined;
