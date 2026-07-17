@@ -32,6 +32,12 @@ const DoctorAvailability = lazy(() => import("./pages/doctor/DoctorAvailability.
 const DoctorConsultation = lazy(() => import("./pages/doctor/DoctorConsultation.tsx"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
 const AdminDoctors = lazy(() => import("./pages/admin/AdminDoctors.tsx"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics.tsx"));
+const AdminAppointments = lazy(() => import("./pages/admin/AdminAppointments.tsx"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminPayments.tsx"));
+const AdminFeedback = lazy(() => import("./pages/admin/AdminFeedback.tsx"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications.tsx"));
+const AdminCMS = lazy(() => import("./pages/admin/AdminCMS.tsx"));
 const DoctorPortalLogin = lazy(() => import("./pages/portal/DoctorPortalLogin.tsx"));
 const AdminPortalLogin = lazy(() => import("./pages/portal/AdminPortalLogin.tsx"));
 const ConsultationRoom = lazy(() => import("./pages/consultation/ConsultationRoom.tsx"));
@@ -105,13 +111,13 @@ const App = () => (
                       <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
                       <Route path="/admin/doctors" element={<ProtectedRoute requiredRole="admin"><AdminDoctors /></ProtectedRoute>} />
                       <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="User Management" /></ProtectedRoute>} />
-                      <Route path="/admin/appointments" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Appointments" /></ProtectedRoute>} />
-                      <Route path="/admin/payments" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Payments" /></ProtectedRoute>} />
-                      <Route path="/admin/feedback" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Feedback" /></ProtectedRoute>} />
+                      <Route path="/admin/appointments" element={<ProtectedRoute requiredRole="admin"><AdminAppointments /></ProtectedRoute>} />
+                      <Route path="/admin/payments" element={<ProtectedRoute requiredRole="admin"><AdminPayments /></ProtectedRoute>} />
+                      <Route path="/admin/feedback" element={<ProtectedRoute requiredRole="admin"><AdminFeedback /></ProtectedRoute>} />
                       <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Reports" /></ProtectedRoute>} />
-                      <Route path="/admin/notifications" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Notifications" /></ProtectedRoute>} />
-                      <Route path="/admin/cms" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="CMS" /></ProtectedRoute>} />
-                      <Route path="/admin/analytics" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Analytics" /></ProtectedRoute>} />
+                      <Route path="/admin/notifications" element={<ProtectedRoute requiredRole="admin"><AdminNotifications /></ProtectedRoute>} />
+                      <Route path="/admin/cms" element={<ProtectedRoute requiredRole="admin"><AdminCMS /></ProtectedRoute>} />
+                      <Route path="/admin/analytics" element={<ProtectedRoute requiredRole="admin"><AdminAnalytics /></ProtectedRoute>} />
                       <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><AdminPlaceholder label="Settings" /></ProtectedRoute>} />
 
                       <Route path="*" element={<NotFound />} />
