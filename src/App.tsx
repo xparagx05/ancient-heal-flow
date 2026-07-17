@@ -34,6 +34,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
 const AdminDoctors = lazy(() => import("./pages/admin/AdminDoctors.tsx"));
 const DoctorPortalLogin = lazy(() => import("./pages/portal/DoctorPortalLogin.tsx"));
 const AdminPortalLogin = lazy(() => import("./pages/portal/AdminPortalLogin.tsx"));
+const ConsultationRoom = lazy(() => import("./pages/consultation/ConsultationRoom.tsx"));
 
 // Placeholders re-exported from DoctorDashboard/AdminDashboard
 import { DoctorPlaceholder } from "./pages/doctor/DoctorDashboard.tsx";
