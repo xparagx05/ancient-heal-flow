@@ -4,6 +4,7 @@ import logo from "@/assets/dhanvantara-logo.png";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import LanguageToggle from "./LanguageToggle";
+import PortalMenu from "./PortalMenu";
 import { useBooking } from "@/context/BookingContext";
 import { useI18n } from "@/context/I18nContext";
 
