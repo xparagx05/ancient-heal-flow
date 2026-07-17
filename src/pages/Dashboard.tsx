@@ -5,6 +5,7 @@ import { Calendar, Clock, Video, RotateCw, X, ArrowLeft, CheckCircle2, IndianRup
 import Navbar from "@/components/dhanvantara/Navbar";
 import Footer from "@/components/dhanvantara/Footer";
 import EmergencyButton from "@/components/dhanvantara/EmergencyButton";
+import { PatientAppointmentsCard, PatientPrescriptionsCard } from "@/components/dhanvantara/PatientCards";
 import { Appointment, useBooking } from "@/context/BookingContext";
 
 const slots = ["09:00 AM", "10:30 AM", "12:00 PM", "02:30 PM", "04:00 PM", "06:30 PM"];
@@ -151,6 +152,11 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <PatientAppointmentsCard />
+          <PatientPrescriptionsCard />
+        </div>
       </section>
 
       <Footer />

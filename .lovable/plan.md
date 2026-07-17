@@ -1,80 +1,101 @@
-## Phase 1 — Auth, RBAC, and Portal Shells
+# Phase 2 — Complete Healthcare Workflow
 
-Goal: add real authentication, role-based routing, and empty Doctor + Admin dashboard shells that match the existing Dhanvantara AI design. **Zero changes** to Home, Hero, Founders, Pricing, Footer, existing Patient Dashboard, or booking flow.
+**Ground rule (unchanged):** No visual/UX changes to Home, Hero, Navbar styling, Founders, Doctors carousel, Pricing, Footer, existing `/dashboard`, `BookingModal`, or Razorpay flow. Only *extend* — add a new Portal menu item and new pages behind it. All new UI reuses the existing tokens, glass, gold gradient, and Cormorant nav typography.
 
-### 1. Database (migration)
+Phase 2 is very large. To keep quality high and ship real (not stubbed) features, I'll deliver it in **four sub-phases**, each independently testable. This plan covers sub-phase **2A** in detail; 2B–2D are outlined so you know the shape.
 
-Tables (all in `public`, with GRANTs + RLS + `has_role` security-definer function per RBAC best practices):
+---
 
-- `profiles` — `user_id`, `full_name`, `email`, `phone`, `avatar_url`
-- `app_role` enum — `patient` | `doctor` | `admin` (extensible to `super_admin`, `moderator` later)
-- `user_roles` — `user_id`, `role` (roles NEVER on profiles)
-- `doctor_applications` — full onboarding payload: reg number, specialization, qualification, experience, clinic, fee, languages, working hours, gov ID url, license url, bio, `status` (`pending` | `approved` | `rejected` | `needs_info` | `suspended`), admin notes
-- `doctors` — approved doctor directory (created on approval), links to `user_id` + application
-- `storage bucket` `doctor-documents` (private) for ID/license uploads
+## 2A — Foundations + Portal Menu + Appointments + Prescriptions (this sprint)
 
-RLS:
-- Users read/update own profile
-- Users read own roles; only admins insert/delete roles
-- Doctors read/update own application; admins read/update all
-- `has_role(uuid, app_role)` security-definer function used in every policy that checks admin
+### 1. Navbar addition (non-destructive)
+- Add a single new item **"Portal"** to the existing links array in `Navbar.tsx`, styled identically (same Cormorant serif, same hover gradient).
+- Click opens a **premium dropdown** anchored to the item (Radix popover + glass panel, gold divider), with three tiles:
+  - 👤 **Patient Portal** → `/auth?role=patient`
+  - 👨‍⚕️ **Doctor Portal** → `/portal/doctor`
+  - 🛡️ **Admin Portal** → `/portal/admin`
+- When already signed in, the dropdown instead shows: current role badge, "Go to Dashboard", "Sign out".
 
-Trigger: on `auth.users` insert → create `profiles` row + assign default `patient` role.
+### 2. Professional & Admin IDs
+Migration:
+- Add `professional_id text unique` to `doctors` (format `DOC-YYYY-####`).
+- Add `admin_id text unique` to a new `admin_profiles(user_id, admin_id)` table.
+- Sequence + trigger to assign on approval / on first admin role grant.
+- Surface `professional_id` on `/doctor` dashboard header and in admin doctor list.
 
-Admin bootstrap: after you sign up, I'll give you a one-line SQL snippet:
-```sql
-insert into public.user_roles (user_id, role)
-select id, 'admin' from auth.users where email = 'you@example.com';
-```
+### 3. Role-scoped sign-in pages
+- `/portal/doctor` — professional ID + password. Resolves ID → email server-side (edge function `resolve-doctor-id`) then signs in with email/password. Rejects if role ≠ doctor or application not `approved`; shows "Awaiting verification" or "Complete application" CTA.
+- `/portal/admin` — admin ID + password, same pattern via `resolve-admin-id`. Hard-fails if user lacks admin role.
+- Patient portal continues to use existing `/auth` (email/password + Google).
 
-### 2. Auth
+### 4. Appointments schema (the backbone for everything after)
+New tables:
+- `appointments` — patient_id, doctor_id, scheduled_at, duration_min, mode (`video`|`clinic`), status (`pending_payment`|`confirmed`|`in_progress`|`completed`|`cancelled`|`no_show`), fee, payment_id, room_url, started_at, ended_at, notes.
+- `prescriptions` — appointment_id, doctor_id, patient_id, diagnosis, advice, follow_up_date, pdf_path, issued_at.
+- `prescription_items` — prescription_id, medicine, dosage, frequency, duration, instructions, order_index.
+- `consultation_notes` — appointment_id, subjective, objective, assessment, plan (SOAP).
+- RLS: patient sees own rows; doctor sees rows where doctor_id = them; admin sees all. GRANTs to authenticated + service_role per rules.
 
-- Enable email/password (no auto-confirm off by default — I'll turn auto-confirm ON for dev speed; you can disable later)
-- Google OAuth via `lovable.auth.signInWithOAuth`
-- New route `/auth` — login + signup tabs, matches existing glass/navy/gold theme
-- `AuthProvider` context (session + role) with `onAuthStateChange` listener
-- `ProtectedRoute` component: `requiredRole?: 'patient' | 'doctor' | 'admin'`
-- Post-login role router: patient → `/dashboard`, doctor → `/doctor` (or `/doctor/pending` if not approved), admin → `/admin`
+### 5. Booking → appointment wiring
+- After Razorpay success in the existing flow, insert a `confirmed` appointment (no UI change to the modal; only the success handler is extended).
+- Patient dashboard gets a new "Upcoming Consultations" card (added *below* existing content, existing sections untouched).
 
-### 3. Doctor Portal shell (`/doctor/*`)
+### 6. Doctor workspace (real, replaces placeholders)
+- `/doctor` overview — live counts from `appointments` for the signed-in doctor.
+- `/doctor/appointments` — today / upcoming / past tabs, filters, search.
+- `/doctor/patients/:id` — profile + past appointments + prescriptions timeline.
+- `/doctor/consultations/:appointmentId` — the consultation workspace:
+  - Patient summary panel
+  - SOAP notes editor (autosave to `consultation_notes`)
+  - **Prescription Builder** — add medicine rows (name, dosage, frequency, duration, instructions), reorder, remove
+  - "Generate PDF" → edge function `generate-prescription-pdf` renders a branded PDF (Dhanvantara letterhead, doctor name + professional ID + signature line), uploads to a new private `prescriptions` bucket, stores signed URL path on `prescriptions.pdf_path`.
+  - "Complete consultation" → sets `status=completed`, `ended_at=now()`, patient dashboard shows the prescription download.
+- `/doctor/availability` — weekly hours grid stored in `doctor_availability` (day_of_week, start, end).
 
-- `/doctor/apply` — full multi-step onboarding form (all fields you listed + document uploads to storage bucket)
-- `/doctor/pending` — "Application under review" state screen
-- `/doctor` — dashboard shell with cards (Today's Patients, Upcoming, Completed, Pending, Avg Rating, Earnings, Monthly Stats) — numbers are 0/placeholder in Phase 1
-- Sidebar nav for future sections (Appointments, Calendar, Availability, Consultations, Analytics, Feedback) — routes registered but pages are "Coming in Phase 2" placeholders
-- Uses existing glass cards, navy+gold, Cormorant/Playfair typography
+### 7. Patient side additions (additive only)
+- New `<PrescriptionsCard/>` on `/dashboard` listing PDFs with download button (signed URL).
+- New `<AppointmentsCard/>` showing upcoming + a "Join video" button that appears 10 min before start.
+- Feedback modal after `completed` status — 1–5 stars + comment → `appointment_feedback` table.
 
-### 4. Admin Portal shell (`/admin/*`)
+---
 
-- `/admin` — overview dashboard shell (Total Users, Doctors, Appointments, Revenue, Pending Reports, etc. — live counts where trivially available, else 0)
-- `/admin/doctors` — **Doctor Verification Center** (functional in Phase 1): list applications, view uploaded docs, Approve / Reject / Request Info / Suspend
-- Sidebar nav placeholders for Users, Appointments, Payments, Feedback, Reports, Notifications, CMS, Analytics
+## 2B — Video consultation (Daily.co, live)
+- Wire `create-daily-room` into appointment confirmation; store `room_url` on the row.
+- `/consult/:appointmentId` route with Daily's `@daily-co/daily-js` embed: waiting room, camera/mic toggles, chat, timer, connection indicator, end-call.
+- On end: persist `started_at`/`ended_at`, mark appointment `completed`, auto-open prescription for doctor / feedback for patient.
+- Graceful fallback UI when `DAILY_API_KEY` unset.
 
-On approve: insert into `doctors`, ensure `doctor` role in `user_roles`, application status → `approved`. Email notification deferred to Phase 4.
+## 2C — Admin center (real functionality)
+- User Management (search, filter, suspend/restore via `profiles.status`).
+- Doctor Management extends existing Verification Center (suspend/reactivate, view docs).
+- Appointment Center (all appointments, cancel/reschedule/reassign).
+- Revenue Dashboard (subscriptions + consultations from Razorpay records + `appointments.fee`).
+- Feedback Center + Reports Center (new `reports` table for user-submitted reports; admin actions: warn/suspend/ban).
+- Notifications (broadcast table + patient/doctor inbox component).
+- Analytics (revenue, appointments, growth, peak hours, top specializations, ratings) — computed via SQL views.
 
-### 5. Video consultation (Daily.co) — infrastructure only in Phase 1
+## 2D — Polish
+- Lazy-load `/portal/*`, `/doctor/*`, `/admin/*`, `/consult/*` via `React.lazy` so homepage bundle is unaffected.
+- Notifications toasts + bell dropdown wired to a `notifications` table.
+- E2E RBAC audit + linter pass.
 
-- Add secret request for `DAILY_API_KEY` (graceful degradation if missing)
-- Edge function `create-daily-room` (stub, called when appointment is confirmed in Phase 2)
-- Modular provider interface (`src/lib/video/provider.ts`) so Twilio/Jitsi can swap later
-- No UI wiring yet — full consultation workspace lands in Phase 2
+---
 
-### 6. What is NOT touched
+## Technical notes
+- Stack unchanged: React 18 + Vite + Tailwind + shadcn + framer-motion + Supabase.
+- New deps: `@react-pdf/renderer` (server-side via edge function using Deno-compatible `pdf-lib`) — I'll use `pdf-lib` in the edge function so no client bundle bloat.
+- All new pages use existing tokens (`bg-gradient-gold`, `glass`, `font-display`) — zero new colors/fonts.
+- Every new `public.*` table ships with GRANTs + RLS in the same migration.
+- Professional ID resolution uses a `SECURITY DEFINER` function to avoid exposing `auth.users`.
 
-Home, Hero, Navbar (I'll only add a subtle "Sign in" affordance if you don't already have one — otherwise unchanged), Founders, Doctors carousel, Pricing, Footer, existing `/dashboard`, `BookingModal`, Razorpay flow, all animations, colors, typography.
+---
 
-### Deliverables at end of Phase 1
+## What I'll do first if you approve
+1. Migration: `appointments`, `prescriptions`, `prescription_items`, `consultation_notes`, `doctor_availability`, `appointment_feedback`, `admin_profiles`, `professional_id` on `doctors`, ID sequences + triggers, RLS, GRANTs.
+2. `prescriptions` storage bucket (private).
+3. Navbar Portal dropdown.
+4. `/portal/doctor` and `/portal/admin` sign-in pages + resolver edge functions.
+5. Doctor consultation workspace + prescription builder + PDF edge function.
+6. Patient dashboard additive cards.
 
-- You can sign up, get promoted to admin via SQL, log in as admin, see Verification Center
-- A second account can apply as a doctor, get approved, log in and see the doctor dashboard shell
-- Patient flow works exactly as today
-- Foundation ready for Phase 2 (appointments, prescriptions, calendar, real video)
-
-### Technical notes
-
-- Migration will be a single call with all tables, GRANTs, RLS, `has_role`, trigger
-- Google OAuth uses `supabase--configure_social_auth`
-- Daily.co API key requested via `add_secret` at the end of Phase 1 or start of Phase 2 — your choice
-- All new pages use existing Tailwind tokens, `glass` class, `text-gradient-gold`, Cormorant/Playfair fonts already in `index.css`
-
-Reply "go" to start, or tell me anything to adjust (e.g. skip Google OAuth, defer Daily secret, different admin email, etc.).
+Reply **"go 2A"** to start, or tell me which parts of 2A to drop/reorder (e.g. skip availability for now, defer PDF to 2B, etc.). 2B/2C/2D each follow as separate sprints so you can review incrementally instead of one giant unreviewable dump.
