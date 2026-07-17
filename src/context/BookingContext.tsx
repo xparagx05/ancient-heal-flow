@@ -61,6 +61,8 @@ export type Appointment = {
   paymentId?: string;
   orderId?: string;
   receiptId?: string;
+  supaId?: string;
+
 };
 
 export type Notification = {
