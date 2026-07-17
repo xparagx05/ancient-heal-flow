@@ -5,9 +5,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { admin_id } = await req.json();
-    if (!admin_id || typeof admin_id !== "string") {
-      return json({ error: "admin_id required" }, 400);
+    const body = await req.json().catch(() => ({}));
+    const admin_id = body?.admin_id;
+    if (typeof admin_id !== "string" || admin_id.length < 3 || admin_id.length > 64 || !/^[A-Za-z0-9-]+$/.test(admin_id)) {
+      return json({ error: "Valid admin_id required" }, 400);
     }
     const client = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -16,12 +17,13 @@ Deno.serve(async (req) => {
     const { data, error } = await client.rpc("resolve_admin_email", {
       _admin_id: admin_id.trim().toUpperCase(),
     });
-    if (error) return json({ error: error.message }, 500);
+    if (error) { console.error("[resolve-admin-id]", error); return json({ error: "Lookup failed" }, 500); }
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) return json({ error: "No admin account found with that ID." }, 404);
     return json({ email: row.email });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error("[resolve-admin-id]", e);
+    return json({ error: "Lookup failed" }, 500);
   }
 });
 
