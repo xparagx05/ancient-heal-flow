@@ -157,6 +157,9 @@ export default function Dashboard() {
           <PatientAppointmentsCard />
           <PatientPrescriptionsCard />
         </div>
+        <div className="mt-6">
+          <PatientHistoryCard />
+        </div>
       </section>
 
       <Footer />
