@@ -1,101 +1,75 @@
-# Phase 2 — Complete Healthcare Workflow
+# Phase 2B — Scoped Delivery Plan
 
-**Ground rule (unchanged):** No visual/UX changes to Home, Hero, Navbar styling, Founders, Doctors carousel, Pricing, Footer, existing `/dashboard`, `BookingModal`, or Razorpay flow. Only *extend* — add a new Portal menu item and new pages behind it. All new UI reuses the existing tokens, glass, gold gradient, and Cormorant nav typography.
+Phase 2B as written is ~30+ features. Shipping it in one pass would produce broken flows, oversized migrations, and untestable code. I'll deliver it in 5 tight, verifiable sub-phases. Each preserves the existing UI/UX exactly and only extends behavior.
 
-Phase 2 is very large. To keep quality high and ship real (not stubbed) features, I'll deliver it in **four sub-phases**, each independently testable. This plan covers sub-phase **2A** in detail; 2B–2D are outlined so you know the shape.
-
----
-
-## 2A — Foundations + Portal Menu + Appointments + Prescriptions (this sprint)
-
-### 1. Navbar addition (non-destructive)
-- Add a single new item **"Portal"** to the existing links array in `Navbar.tsx`, styled identically (same Cormorant serif, same hover gradient).
-- Click opens a **premium dropdown** anchored to the item (Radix popover + glass panel, gold divider), with three tiles:
-  - 👤 **Patient Portal** → `/auth?role=patient`
-  - 👨‍⚕️ **Doctor Portal** → `/portal/doctor`
-  - 🛡️ **Admin Portal** → `/portal/admin`
-- When already signed in, the dropdown instead shows: current role badge, "Go to Dashboard", "Sign out".
-
-### 2. Professional & Admin IDs
-Migration:
-- Add `professional_id text unique` to `doctors` (format `DOC-YYYY-####`).
-- Add `admin_id text unique` to a new `admin_profiles(user_id, admin_id)` table.
-- Sequence + trigger to assign on approval / on first admin role grant.
-- Surface `professional_id` on `/doctor` dashboard header and in admin doctor list.
-
-### 3. Role-scoped sign-in pages
-- `/portal/doctor` — professional ID + password. Resolves ID → email server-side (edge function `resolve-doctor-id`) then signs in with email/password. Rejects if role ≠ doctor or application not `approved`; shows "Awaiting verification" or "Complete application" CTA.
-- `/portal/admin` — admin ID + password, same pattern via `resolve-admin-id`. Hard-fails if user lacks admin role.
-- Patient portal continues to use existing `/auth` (email/password + Google).
-
-### 4. Appointments schema (the backbone for everything after)
-New tables:
-- `appointments` — patient_id, doctor_id, scheduled_at, duration_min, mode (`video`|`clinic`), status (`pending_payment`|`confirmed`|`in_progress`|`completed`|`cancelled`|`no_show`), fee, payment_id, room_url, started_at, ended_at, notes.
-- `prescriptions` — appointment_id, doctor_id, patient_id, diagnosis, advice, follow_up_date, pdf_path, issued_at.
-- `prescription_items` — prescription_id, medicine, dosage, frequency, duration, instructions, order_index.
-- `consultation_notes` — appointment_id, subjective, objective, assessment, plan (SOAP).
-- RLS: patient sees own rows; doctor sees rows where doctor_id = them; admin sees all. GRANTs to authenticated + service_role per rules.
-
-### 5. Booking → appointment wiring
-- After Razorpay success in the existing flow, insert a `confirmed` appointment (no UI change to the modal; only the success handler is extended).
-- Patient dashboard gets a new "Upcoming Consultations" card (added *below* existing content, existing sections untouched).
-
-### 6. Doctor workspace (real, replaces placeholders)
-- `/doctor` overview — live counts from `appointments` for the signed-in doctor.
-- `/doctor/appointments` — today / upcoming / past tabs, filters, search.
-- `/doctor/patients/:id` — profile + past appointments + prescriptions timeline.
-- `/doctor/consultations/:appointmentId` — the consultation workspace:
-  - Patient summary panel
-  - SOAP notes editor (autosave to `consultation_notes`)
-  - **Prescription Builder** — add medicine rows (name, dosage, frequency, duration, instructions), reorder, remove
-  - "Generate PDF" → edge function `generate-prescription-pdf` renders a branded PDF (Dhanvantara letterhead, doctor name + professional ID + signature line), uploads to a new private `prescriptions` bucket, stores signed URL path on `prescriptions.pdf_path`.
-  - "Complete consultation" → sets `status=completed`, `ended_at=now()`, patient dashboard shows the prescription download.
-- `/doctor/availability` — weekly hours grid stored in `doctor_availability` (day_of_week, start, end).
-
-### 7. Patient side additions (additive only)
-- New `<PrescriptionsCard/>` on `/dashboard` listing PDFs with download button (signed URL).
-- New `<AppointmentsCard/>` showing upcoming + a "Join video" button that appears 10 min before start.
-- Feedback modal after `completed` status — 1–5 stars + comment → `appointment_feedback` table.
+You approve one sub-phase at a time. I'll say when the previous sub-phase is verified before starting the next.
 
 ---
 
-## 2B — Video consultation (Daily.co, live)
-- Wire `create-daily-room` into appointment confirmation; store `room_url` on the row.
-- `/consult/:appointmentId` route with Daily's `@daily-co/daily-js` embed: waiting room, camera/mic toggles, chat, timer, connection indicator, end-call.
-- On end: persist `started_at`/`ended_at`, mark appointment `completed`, auto-open prescription for doctor / feedback for patient.
-- Graceful fallback UI when `DAILY_API_KEY` unset.
+## 2B.1 — Appointment Lifecycle Wiring (core spine)
 
-## 2C — Admin center (real functionality)
-- User Management (search, filter, suspend/restore via `profiles.status`).
-- Doctor Management extends existing Verification Center (suspend/reactivate, view docs).
-- Appointment Center (all appointments, cancel/reschedule/reassign).
-- Revenue Dashboard (subscriptions + consultations from Razorpay records + `appointments.fee`).
-- Feedback Center + Reports Center (new `reports` table for user-submitted reports; admin actions: warn/suspend/ban).
-- Notifications (broadcast table + patient/doctor inbox component).
-- Analytics (revenue, appointments, growth, peak hours, top specializations, ratings) — computed via SQL views.
+The single most valuable piece. Everything downstream depends on it.
 
-## 2D — Polish
-- Lazy-load `/portal/*`, `/doctor/*`, `/admin/*`, `/consult/*` via `React.lazy` so homepage bundle is unaffected.
-- Notifications toasts + bell dropdown wired to a `notifications` table.
-- E2E RBAC audit + linter pass.
+- On Razorpay payment success (`verify-razorpay-payment` edge fn): create a real row in `appointments` (status `scheduled`, mode `video`, fee from Razorpay order, scheduled_at from patient booking) — currently appointments live only in `localStorage` via `BookingContext`.
+- Add a `notifications` table (recipient_user_id, role, type, title, body, link, read_at) + RLS + realtime publication.
+- Doctor accepts / rejects appointment → status transitions `scheduled → confirmed → in_progress → completed | cancelled`. Emit notifications on each transition.
+- Patient dashboard `<AppointmentsCard/>` starts reading from Supabase (not localStorage). LocalStorage stays as legacy fallback for old bookings so nothing you see today disappears.
+
+Deliverable: booking → payment → doctor sees it live → confirm → both sides see confirmed status.
+
+## 2B.2 — Daily.co Video + Join Window
+
+- Add `DAILY_API_KEY` (I'll request via `add_secret` when you're ready — you'll paste it into the secure form).
+- On appointment `confirmed`, call `create-daily-room` and persist `video_room_url`, `video_room_name`, `video_expires_at` on the appointment row.
+- New `/consult/:appointmentId` route (lazy-loaded) with `@daily-co/daily-js` prebuilt embed: waiting room, mic/cam controls, chat, screenshare, network indicator, timer, participant names, end call.
+- "Join video" button visible on both dashboards from T-10min until appointment end. Missing key → graceful "Video not yet available" message (already scaffolded).
+- On call end: record `started_at`, `ended_at`, `duration_seconds`; auto-open prescription workspace for doctor + feedback modal for patient.
+
+## 2B.3 — Realtime Notifications + Notification Center
+
+- Enable Supabase Realtime on `notifications` + `appointments`.
+- Reuse existing `NotificationBell` component; swap its data source from `BookingContext` in-memory to Supabase realtime channel scoped to `auth.uid()`.
+- New `<NotificationCenter/>` panel (glass card, matches existing bell dropdown styling) with unread count, mark read, delete, filter by type. Same component used in Patient/Doctor/Admin portals — one visual, three data scopes.
+- Triggers fire notifications for: booking confirmed, doctor accept/reject, prescription ready, feedback request, doctor application (admin), new report (admin).
+
+## 2B.4 — Feedback + Patient Prescription Timeline + Doctor Workspace polish
+
+- Feedback modal on consultation end → writes to existing `appointment_feedback` table. Doctor sees aggregate rating on dashboard (already scaffolded to read).
+- Patient dashboard gets a "Prescription Timeline" additive card (existing `<PrescriptionsCard/>` extended, not redesigned) with signed-URL download.
+- Doctor `DoctorConsultation.tsx` split layout: left = video embed + collapsible patient context (profile, past prescriptions, uploaded files). Right = existing SOAP + Rx builder untouched. Autosave interval tightened to every 8s (currently on-blur only).
+- Admin `AdminDoctors` already works; add live counts to `AdminDashboard` (users, doctors, appointments today, revenue this month) using SQL aggregate reads.
+
+## 2B.5 — Optional extensions (only if you still want them after 2B.1–4 ship)
+
+Explicitly deferred so we don't drown 2B:
+
+- AI assistant for doctor note formatting (Lovable AI Gateway, doctor-approval required)
+- Global search across roles
+- Patient file uploads (medical reports bucket)
+- Email automation (appointment confirmation, prescription ready) — needs email infra; I'll run `email_domain--check_email_domain_status` when we get here
+- Analytics charts (Recharts) for admin
+- Confetti / advanced micro-interactions
+- Doctor Calendar view + Patients directory pages
+
+Each of these is a real ~1–2h chunk. Bundling them into 2B is what would break the existing UI. I'd rather ship 2B.1–4 solidly, then let you pick which of 2B.5 to do next.
 
 ---
 
-## Technical notes
-- Stack unchanged: React 18 + Vite + Tailwind + shadcn + framer-motion + Supabase.
-- New deps: `@react-pdf/renderer` (server-side via edge function using Deno-compatible `pdf-lib`) — I'll use `pdf-lib` in the edge function so no client bundle bloat.
-- All new pages use existing tokens (`bg-gradient-gold`, `glass`, `font-display`) — zero new colors/fonts.
-- Every new `public.*` table ships with GRANTs + RLS in the same migration.
-- Professional ID resolution uses a `SECURITY DEFINER` function to avoid exposing `auth.users`.
+## Technical notes (skip if not interested)
+
+- Migrations: one per sub-phase. Each `CREATE TABLE` in `public` gets `GRANT`s + RLS + policies in the same file (per project rules).
+- No changes to: Hero, Navbar, Founder, Pricing, Footer, Index landing, existing patient/doctor/admin dashboard shells. Only additive cards and new routes.
+- Everything new is lazy-loaded so `/` bundle size stays flat.
+- RBAC: notifications scoped by `recipient_user_id = auth.uid()`; consult room access checked server-side against appointment participants.
+- Legacy `BookingContext` localStorage stays in place during 2B.1 to keep the existing patient booking demo working; we migrate reads to Supabase without removing the fallback.
 
 ---
 
-## What I'll do first if you approve
-1. Migration: `appointments`, `prescriptions`, `prescription_items`, `consultation_notes`, `doctor_availability`, `appointment_feedback`, `admin_profiles`, `professional_id` on `doctors`, ID sequences + triggers, RLS, GRANTs.
-2. `prescriptions` storage bucket (private).
-3. Navbar Portal dropdown.
-4. `/portal/doctor` and `/portal/admin` sign-in pages + resolver edge functions.
-5. Doctor consultation workspace + prescription builder + PDF edge function.
-6. Patient dashboard additive cards.
+## What I need from you
 
-Reply **"go 2A"** to start, or tell me which parts of 2A to drop/reorder (e.g. skip availability for now, defer PDF to 2B, etc.). 2B/2C/2D each follow as separate sprints so you can review incrementally instead of one giant unreviewable dump.
+Reply with one of:
+
+- **"go 2B.1"** → I start immediately with the appointment lifecycle wiring.
+- **"go 2B.1 without X"** → drop something from 2B.1.
+- **"reorder: video first"** → do 2B.2 before 2B.1 (I'll flag the dependency risk).
+- **"do it all"** → I'll still ship in this order, just without pausing between sub-phases. Higher risk of a rough intermediate state visible in the preview.

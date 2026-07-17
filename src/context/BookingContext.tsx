@@ -1,5 +1,50 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Best-effort mirror of the legacy localStorage booking flow into Supabase.
+ * If the user is signed in AND a real doctor row exists with a matching name,
+ * we create/update a real `appointments` row so doctors + admins see the booking
+ * live. Otherwise we silently fall back to the legacy local-only behavior.
+ */
+async function syncApptToSupabase(appt: Appointment): Promise<string | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: doc } = await supabase
+      .from("doctors")
+      .select("id, user_id")
+      .ilike("full_name", appt.doctor)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!doc) return null;
+    const scheduled = new Date(`${appt.date} ${appt.time}`);
+    if (isNaN(scheduled.getTime())) return null;
+    const { data, error } = await supabase.from("appointments").insert({
+      patient_id: user.id,
+      doctor_id: doc.id,
+      doctor_user_id: doc.user_id,
+      scheduled_at: scheduled.toISOString(),
+      mode: "video",
+      fee: appt.amount,
+      status: "pending_payment",
+      patient_notes: `${appt.name ?? ""} · ${appt.email ?? ""} · ${appt.phone}`,
+    }).select("id").single();
+    if (error) return null;
+    return data.id;
+  } catch { return null; }
+}
+
+async function markSupaAppointmentPaid(supaId: string, paymentId?: string) {
+  try {
+    await supabase.from("appointments").update({
+      status: "confirmed",
+      payment_id: paymentId ?? null,
+    }).eq("id", supaId);
+  } catch { /* noop */ }
+}
+
 
 export type Appointment = {
   id: string;
@@ -16,6 +61,8 @@ export type Appointment = {
   paymentId?: string;
   orderId?: string;
   receiptId?: string;
+  supaId?: string;
+
 };
 
 export type Notification = {
@@ -93,6 +140,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     setAppointments((prev) => [appt, ...prev]);
+    // Best-effort Supabase mirror (no-op when signed out or doctor row not found)
+    syncApptToSupabase(appt).then((supaId) => {
+      if (supaId) {
+        setAppointments((prev) => prev.map((x) => x.id === appt.id ? { ...x, supaId } : x));
+      }
+    });
     pushNotification({
       title: "Appointment booked",
       message: `Your appointment with ${appt.doctor} is reserved for ${appt.date} at ${appt.time}.`,
@@ -107,6 +160,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     return appt;
   };
 
+
   const markPaid: Ctx["markPaid"] = (id, meta) => {
     let appt: Appointment | undefined;
     setAppointments((prev) => prev.map((a) => {
@@ -116,7 +170,11 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       }
       return a;
     }));
+    if (appt?.supaId) {
+      markSupaAppointmentPaid(appt.supaId, meta?.paymentId);
+    }
     if (appt) {
+
       pushNotification({
         title: "Payment successful",
         message: `✅ ₹${appt.amount} paid. Appointment with ${appt.doctor} confirmed at ${appt.time}, ${appt.date}.`,

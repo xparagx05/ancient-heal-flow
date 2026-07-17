@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Users, Clock, Video, ArrowRight } from "lucide-react";
+import { Calendar, Users, Clock, Video, ArrowRight, Check, X, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import PortalShell from "@/components/PortalShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+
 
 const nav = [
   { to: "/doctor", label: "Overview", icon: <Calendar className="w-4 h-4" /> },
@@ -28,30 +30,55 @@ export default function DoctorAppointments() {
   const [rows, setRows] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999);
+
+    let q = supabase.from("appointments").select("*").eq("doctor_user_id", user.id);
+    if (tab === "today") q = q.gte("scheduled_at", startOfDay.toISOString()).lte("scheduled_at", endOfDay.toISOString());
+    if (tab === "upcoming") q = q.gt("scheduled_at", endOfDay.toISOString());
+    if (tab === "past") q = q.lt("scheduled_at", startOfDay.toISOString());
+    const { data } = await q.order("scheduled_at", { ascending: tab !== "past" });
+
+    const ids = Array.from(new Set((data ?? []).map((r) => r.patient_id)));
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids)
+      : { data: [] as { user_id: string; full_name: string | null; email: string | null }[] };
+    const pmap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+
+    setRows((data ?? []).map((r) => ({ ...r, patient: pmap.get(r.patient_id) })) as Appt[]);
+    setLoading(false);
+  }, [user, tab]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Realtime: refetch when this doctor's appointments change
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      setLoading(true);
-      const now = new Date();
-      const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999);
+    const ch = supabase
+      .channel(`doc-appts-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `doctor_user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, load]);
 
-      let q = supabase.from("appointments").select("*").eq("doctor_user_id", user.id);
-      if (tab === "today") q = q.gte("scheduled_at", startOfDay.toISOString()).lte("scheduled_at", endOfDay.toISOString());
-      if (tab === "upcoming") q = q.gt("scheduled_at", endOfDay.toISOString());
-      if (tab === "past") q = q.lt("scheduled_at", startOfDay.toISOString());
-      const { data } = await q.order("scheduled_at", { ascending: tab !== "past" });
+  async function updateStatus(id: string, status: "confirmed" | "cancelled" | "completed") {
+    const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(
+      status === "confirmed" ? "Appointment confirmed" :
+      status === "cancelled" ? "Appointment cancelled" :
+      "Marked complete"
+    );
+  }
 
-      const ids = Array.from(new Set((data ?? []).map((r) => r.patient_id)));
-      const { data: profs } = ids.length
-        ? await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids)
-        : { data: [] as any[] };
-      const pmap = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
-
-      setRows((data ?? []).map((r: any) => ({ ...r, patient: pmap.get(r.patient_id) })));
-      setLoading(false);
-    })();
-  }, [user, tab]);
 
   return (
     <PortalShell title="Appointments" accent="Doctor Portal" nav={nav}>
@@ -97,10 +124,36 @@ export default function DoctorAppointments() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${statusTint(r.status)}`}>
                   {r.status.replace("_", " ")}
                 </span>
+                {(r.status === "pending_payment" || r.status === "confirmed") && (
+                  <>
+                    {r.status === "pending_payment" && (
+                      <button
+                        onClick={() => updateStatus(r.id, "confirmed")}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+                      >
+                        <Check className="w-3 h-3" /> Accept
+                      </button>
+                    )}
+                    <button
+                      onClick={() => updateStatus(r.id, "cancelled")}
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-400 hover:bg-rose-500/25"
+                    >
+                      <X className="w-3 h-3" /> Cancel
+                    </button>
+                  </>
+                )}
+                {r.status === "in_progress" && (
+                  <button
+                    onClick={() => updateStatus(r.id, "completed")}
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 hover:bg-blue-500/25"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Complete
+                  </button>
+                )}
                 <Link
                   to={`/doctor/consultations/${r.id}`}
                   className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
@@ -108,6 +161,7 @@ export default function DoctorAppointments() {
                   Open <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
+
             </motion.div>
           ))}
         </div>
