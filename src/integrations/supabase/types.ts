@@ -90,6 +90,8 @@ export type Database = {
           patient_notes: string | null
           payment_id: string | null
           razorpay_order_id: string | null
+          room_expires_at: string | null
+          room_name: string | null
           room_url: string | null
           scheduled_at: string
           started_at: string | null
@@ -109,6 +111,8 @@ export type Database = {
           patient_notes?: string | null
           payment_id?: string | null
           razorpay_order_id?: string | null
+          room_expires_at?: string | null
+          room_name?: string | null
           room_url?: string | null
           scheduled_at: string
           started_at?: string | null
@@ -128,6 +132,8 @@ export type Database = {
           patient_notes?: string | null
           payment_id?: string | null
           razorpay_order_id?: string | null
+          room_expires_at?: string | null
+          room_name?: string | null
           room_url?: string | null
           scheduled_at?: string
           started_at?: string | null
@@ -181,6 +187,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "consultation_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultation_summaries: {
+        Row: {
+          advice: string | null
+          appointment_id: string
+          consultation_date: string
+          created_at: string
+          diagnosis: string | null
+          doctor_id: string
+          doctor_name: string | null
+          doctor_user_id: string
+          duration_seconds: number | null
+          fee: number | null
+          follow_up_date: string | null
+          id: string
+          medicines: Json | null
+          patient_id: string
+          pdf_path: string | null
+          prescription_id: string | null
+          tests_recommended: string | null
+          updated_at: string
+        }
+        Insert: {
+          advice?: string | null
+          appointment_id: string
+          consultation_date: string
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id: string
+          doctor_name?: string | null
+          doctor_user_id: string
+          duration_seconds?: number | null
+          fee?: number | null
+          follow_up_date?: string | null
+          id?: string
+          medicines?: Json | null
+          patient_id: string
+          pdf_path?: string | null
+          prescription_id?: string | null
+          tests_recommended?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advice?: string | null
+          appointment_id?: string
+          consultation_date?: string
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string
+          doctor_name?: string | null
+          doctor_user_id?: string
+          duration_seconds?: number | null
+          fee?: number | null
+          follow_up_date?: string | null
+          id?: string
+          medicines?: Json | null
+          patient_id?: string
+          pdf_path?: string | null
+          prescription_id?: string | null
+          tests_recommended?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_summaries_appointment_id_fkey"
             columns: ["appointment_id"]
             isOneToOne: true
             referencedRelation: "appointments"
@@ -399,6 +476,50 @@ export type Database = {
           type?: string
         }
         Relationships: []
+      }
+      patient_reports: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          patient_id: string
+          size_bytes: number | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          patient_id: string
+          size_bytes?: number | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          patient_id?: string
+          size_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_reports_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prescription_items: {
         Row: {
