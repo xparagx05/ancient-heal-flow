@@ -2,6 +2,3 @@ project_id = "jsxayakputgzgbbyreda"
 
 [functions.dhanvantara-chat]
 verify_jwt = false
-
-[functions.seed-demo-accounts]
-verify_jwt = false

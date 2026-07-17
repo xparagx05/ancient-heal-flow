@@ -33,6 +33,8 @@ export type RzpOpenOpts = {
   prefill?: { name?: string; email?: string; contact?: string };
   notes?: Record<string, string>;
   theme?: { color?: string };
+  /** DB appointment id (uuid) — sent to verify function to confirm server-side */
+  appointmentId?: string;
 };
 
 export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSuccess> {
@@ -71,7 +73,7 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
       handler: async (resp: RzpSuccess) => {
         try {
           const { data: v, error: verr } = await supabase.functions.invoke("verify-razorpay-payment", {
-            body: resp,
+            body: { ...resp, appointment_id: opts.appointmentId },
           });
           if (verr) return reject(new Error(verr.message || "Verification failed"));
           if (!v?.verified) return reject(new Error("Payment signature invalid"));
