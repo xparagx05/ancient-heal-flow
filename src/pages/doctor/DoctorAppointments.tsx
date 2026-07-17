@@ -30,30 +30,55 @@ export default function DoctorAppointments() {
   const [rows, setRows] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const load = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999);
+
+    let q = supabase.from("appointments").select("*").eq("doctor_user_id", user.id);
+    if (tab === "today") q = q.gte("scheduled_at", startOfDay.toISOString()).lte("scheduled_at", endOfDay.toISOString());
+    if (tab === "upcoming") q = q.gt("scheduled_at", endOfDay.toISOString());
+    if (tab === "past") q = q.lt("scheduled_at", startOfDay.toISOString());
+    const { data } = await q.order("scheduled_at", { ascending: tab !== "past" });
+
+    const ids = Array.from(new Set((data ?? []).map((r) => r.patient_id)));
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids)
+      : { data: [] as { user_id: string; full_name: string | null; email: string | null }[] };
+    const pmap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+
+    setRows((data ?? []).map((r) => ({ ...r, patient: pmap.get(r.patient_id) })) as Appt[]);
+    setLoading(false);
+  }, [user, tab]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Realtime: refetch when this doctor's appointments change
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      setLoading(true);
-      const now = new Date();
-      const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999);
+    const ch = supabase
+      .channel(`doc-appts-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments", filter: `doctor_user_id=eq.${user.id}` },
+        () => load()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, load]);
 
-      let q = supabase.from("appointments").select("*").eq("doctor_user_id", user.id);
-      if (tab === "today") q = q.gte("scheduled_at", startOfDay.toISOString()).lte("scheduled_at", endOfDay.toISOString());
-      if (tab === "upcoming") q = q.gt("scheduled_at", endOfDay.toISOString());
-      if (tab === "past") q = q.lt("scheduled_at", startOfDay.toISOString());
-      const { data } = await q.order("scheduled_at", { ascending: tab !== "past" });
+  async function updateStatus(id: string, status: "confirmed" | "cancelled" | "completed") {
+    const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(
+      status === "confirmed" ? "Appointment confirmed" :
+      status === "cancelled" ? "Appointment cancelled" :
+      "Marked complete"
+    );
+  }
 
-      const ids = Array.from(new Set((data ?? []).map((r) => r.patient_id)));
-      const { data: profs } = ids.length
-        ? await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids)
-        : { data: [] as any[] };
-      const pmap = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
-
-      setRows((data ?? []).map((r: any) => ({ ...r, patient: pmap.get(r.patient_id) })));
-      setLoading(false);
-    })();
-  }, [user, tab]);
 
   return (
     <PortalShell title="Appointments" accent="Doctor Portal" nav={nav}>
