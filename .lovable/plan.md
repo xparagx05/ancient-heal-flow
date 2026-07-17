@@ -1,75 +1,138 @@
-# Phase 2B — Scoped Delivery Plan
 
-Phase 2B as written is ~30+ features. Shipping it in one pass would produce broken flows, oversized migrations, and untestable code. I'll deliver it in 5 tight, verifiable sub-phases. Each preserves the existing UI/UX exactly and only extends behavior.
+# Phase 3 — Admin Analytics & CMS
 
-You approve one sub-phase at a time. I'll say when the previous sub-phase is verified before starting the next.
+Focused, additive sprint on the Admin portal. No changes to Patient/Doctor UI, branding, layouts, or existing pages. Everything new lives inside existing admin routes that today render `AdminPlaceholder`.
 
----
+## Scope
 
-## 2B.1 — Appointment Lifecycle Wiring (core spine)
+### 1. Live Admin Dashboard (`/admin`)
+Replace the six static tiles with live counts and add a trends section — same glass-card layout, same tints, same typography.
 
-The single most valuable piece. Everything downstream depends on it.
+- Total Users, Verified Doctors, Pending Verifications — already partially wired, extend.
+- Appointments Today, Appointments This Month, Revenue This Month, Avg Doctor Rating — computed from `appointments` + `appointment_feedback`.
+- Trends row (Recharts, area + bar):
+  - Appointments per day (last 30 days)
+  - Revenue per day (last 30 days)
+  - Status breakdown donut (scheduled / confirmed / completed / cancelled)
+- Recent activity feed: last 10 appointments with patient, doctor, status, timestamp.
 
-- On Razorpay payment success (`verify-razorpay-payment` edge fn): create a real row in `appointments` (status `scheduled`, mode `video`, fee from Razorpay order, scheduled_at from patient booking) — currently appointments live only in `localStorage` via `BookingContext`.
-- Add a `notifications` table (recipient_user_id, role, type, title, body, link, read_at) + RLS + realtime publication.
-- Doctor accepts / rejects appointment → status transitions `scheduled → confirmed → in_progress → completed | cancelled`. Emit notifications on each transition.
-- Patient dashboard `<AppointmentsCard/>` starts reading from Supabase (not localStorage). LocalStorage stays as legacy fallback for old bookings so nothing you see today disappears.
+### 2. Analytics page (`/admin/analytics`)
+Currently `AdminPlaceholder`. Build a proper analytics view:
 
-Deliverable: booking → payment → doctor sees it live → confirm → both sides see confirmed status.
+- Date-range selector (7d / 30d / 90d / custom).
+- KPI strip: total revenue, total consultations, avg consultation duration, avg rating, completion rate, cancellation rate.
+- Charts:
+  - Revenue over time (area)
+  - Appointments by status (stacked bar)
+  - Top 5 doctors by consultations + by revenue (horizontal bar)
+  - Feedback rating distribution (1–5 star bars)
+- CSV export for the current range (client-side, no new edge function).
 
-## 2B.2 — Daily.co Video + Join Window
+### 3. Appointments admin (`/admin/appointments`)
+Currently placeholder. Read-only table:
 
-- Add `DAILY_API_KEY` (I'll request via `add_secret` when you're ready — you'll paste it into the secure form).
-- On appointment `confirmed`, call `create-daily-room` and persist `video_room_url`, `video_room_name`, `video_expires_at` on the appointment row.
-- New `/consult/:appointmentId` route (lazy-loaded) with `@daily-co/daily-js` prebuilt embed: waiting room, mic/cam controls, chat, screenshare, network indicator, timer, participant names, end call.
-- "Join video" button visible on both dashboards from T-10min until appointment end. Missing key → graceful "Video not yet available" message (already scaffolded).
-- On call end: record `started_at`, `ended_at`, `duration_seconds`; auto-open prescription workspace for doctor + feedback modal for patient.
+- Filters: status, date range, doctor, patient search.
+- Columns: date, patient, doctor, status, mode, fee, payment status.
+- Row click → drawer with full appointment + prescription summary from `consultation_summaries`.
+- Pagination (25/page).
 
-## 2B.3 — Realtime Notifications + Notification Center
+### 4. Payments admin (`/admin/payments`)
+Read-only revenue ledger from `appointments` where `payment_status = 'paid'`:
 
-- Enable Supabase Realtime on `notifications` + `appointments`.
-- Reuse existing `NotificationBell` component; swap its data source from `BookingContext` in-memory to Supabase realtime channel scoped to `auth.uid()`.
-- New `<NotificationCenter/>` panel (glass card, matches existing bell dropdown styling) with unread count, mark read, delete, filter by type. Same component used in Patient/Doctor/Admin portals — one visual, three data scopes.
-- Triggers fire notifications for: booking confirmed, doctor accept/reject, prescription ready, feedback request, doctor application (admin), new report (admin).
+- Totals: gross, refunded, net.
+- Table: date, patient, doctor, amount, razorpay_payment_id, status.
+- CSV export.
 
-## 2B.4 — Feedback + Patient Prescription Timeline + Doctor Workspace polish
+### 5. Feedback admin (`/admin/feedback`)
+Read-only:
 
-- Feedback modal on consultation end → writes to existing `appointment_feedback` table. Doctor sees aggregate rating on dashboard (already scaffolded to read).
-- Patient dashboard gets a "Prescription Timeline" additive card (existing `<PrescriptionsCard/>` extended, not redesigned) with signed-URL download.
-- Doctor `DoctorConsultation.tsx` split layout: left = video embed + collapsible patient context (profile, past prescriptions, uploaded files). Right = existing SOAP + Rx builder untouched. Autosave interval tightened to every 8s (currently on-blur only).
-- Admin `AdminDoctors` already works; add live counts to `AdminDashboard` (users, doctors, appointments today, revenue this month) using SQL aggregate reads.
+- Rating distribution chart.
+- Latest 50 reviews with patient, doctor, rating, comment, appointment date.
+- Filter by doctor + min rating.
 
-## 2B.5 — Optional extensions (only if you still want them after 2B.1–4 ship)
+### 6. CMS (`/admin/cms`)
+Editable landing content, stored in a new `site_content` table. Sections editable:
 
-Explicitly deferred so we don't drown 2B:
+- Hero: eyebrow, headline, subhead, CTA labels
+- Pricing plan blurbs (title, price, features[])
+- Founder bios (name, title, blurb, order)
+- Footer contact info
 
-- AI assistant for doctor note formatting (Lovable AI Gateway, doctor-approval required)
-- Global search across roles
-- Patient file uploads (medical reports bucket)
-- Email automation (appointment confirmation, prescription ready) — needs email infra; I'll run `email_domain--check_email_domain_status` when we get here
-- Analytics charts (Recharts) for admin
-- Confetti / advanced micro-interactions
-- Doctor Calendar view + Patients directory pages
+Admin edits via simple form → publishes → landing page reads the row on load with a small fallback to current hardcoded copy so the site never breaks if the row is missing.
 
-Each of these is a real ~1–2h chunk. Bundling them into 2B is what would break the existing UI. I'd rather ship 2B.1–4 solidly, then let you pick which of 2B.5 to do next.
+### 7. Notifications center (`/admin/notifications`)
+Read-only admin view of the `notifications` table (all recipients), filterable by type. Broadcast composer deferred.
 
----
+## Technical details
 
-## Technical notes (skip if not interested)
+### New table (single migration)
 
-- Migrations: one per sub-phase. Each `CREATE TABLE` in `public` gets `GRANT`s + RLS + policies in the same file (per project rules).
-- No changes to: Hero, Navbar, Founder, Pricing, Footer, Index landing, existing patient/doctor/admin dashboard shells. Only additive cards and new routes.
-- Everything new is lazy-loaded so `/` bundle size stays flat.
-- RBAC: notifications scoped by `recipient_user_id = auth.uid()`; consult room access checked server-side against appointment participants.
-- Legacy `BookingContext` localStorage stays in place during 2B.1 to keep the existing patient booking demo working; we migrate reads to Supabase without removing the fallback.
+```sql
+CREATE TABLE public.site_content (
+  key text PRIMARY KEY,           -- 'hero' | 'pricing' | 'founders' | 'footer'
+  value jsonb NOT NULL,
+  updated_by uuid REFERENCES auth.users(id),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
----
+GRANT SELECT ON public.site_content TO anon, authenticated;
+GRANT ALL ON public.site_content TO service_role;
+GRANT INSERT, UPDATE, DELETE ON public.site_content TO authenticated;
 
-## What I need from you
+ALTER TABLE public.site_content ENABLE ROW LEVEL SECURITY;
 
-Reply with one of:
+CREATE POLICY "Public can read site content"
+  ON public.site_content FOR SELECT
+  TO anon, authenticated USING (true);
 
-- **"go 2B.1"** → I start immediately with the appointment lifecycle wiring.
-- **"go 2B.1 without X"** → drop something from 2B.1.
-- **"reorder: video first"** → do 2B.2 before 2B.1 (I'll flag the dependency risk).
-- **"do it all"** → I'll still ship in this order, just without pausing between sub-phases. Higher risk of a rough intermediate state visible in the preview.
+CREATE POLICY "Only admins can write site content"
+  ON public.site_content FOR ALL
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+```
+
+Seed the four keys with today's hardcoded copy so the landing page renders identically after wire-up.
+
+### Aggregations
+
+All charts read directly from existing tables with parameterized `.select()` calls — no RPC needed for v1. Where a client-side sum is expensive (large row counts), fall back to `count: 'exact', head: true` and small day-bucketed selects.
+
+### Libraries
+
+- `recharts` — already a common shadcn dep, will `bun add` if not present.
+- CSV export: tiny inline helper, no new dep.
+
+### Files touched
+
+New:
+- `supabase/migrations/<ts>_site_content.sql`
+- `src/pages/admin/AdminAnalytics.tsx`
+- `src/pages/admin/AdminAppointments.tsx`
+- `src/pages/admin/AdminPayments.tsx`
+- `src/pages/admin/AdminFeedback.tsx`
+- `src/pages/admin/AdminCMS.tsx`
+- `src/pages/admin/AdminNotifications.tsx`
+- `src/lib/admin/analytics.ts` (query helpers)
+- `src/lib/admin/csv.ts`
+
+Edited:
+- `src/pages/admin/AdminDashboard.tsx` — live counts + trends row + activity feed
+- `src/App.tsx` — swap `AdminPlaceholder` routes to the new pages
+- Landing components (`Hero.tsx`, `Pricing.tsx`, `Founder.tsx`, `Footer.tsx`) — read from `site_content` with hardcoded fallback; **zero visual change**
+
+Not touched: Navbar, Features, Experience, Doctors, DashboardPreview, ChatBot, all patient pages, all doctor pages, all auth/portal pages.
+
+## Out of scope for Phase 3
+- Broadcast notifications composer
+- Admin-initiated refunds
+- User management CRUD (`/admin/users`) beyond existing verification flow
+- Email delivery of reports
+- Demo mode
+
+## Verification
+- Type-check + build after each page.
+- Seed a few test appointments to visually confirm charts render.
+- Confirm landing page pixel-identical before and after CMS wire-up.
+
+Reply **go** to start, or edit the scope.
