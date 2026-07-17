@@ -36,9 +36,20 @@ export default function DoctorApply() {
     })();
   }, [session, loading, user, nav]);
 
+  const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+  const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+  const validateFile = (file: File) => {
+    if (!ALLOWED_MIME.includes(file.type)) throw new Error("Only JPG, PNG, WEBP or PDF files are allowed.");
+    if (file.size > MAX_BYTES) throw new Error("File must be under 5 MB.");
+  };
+
   const upload = async (file: File, kind: string) => {
-    const path = `${user!.id}/${kind}-${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("doctor-documents").upload(path, file, { upsert: true });
+    validateFile(file);
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+    const path = `${user!.id}/${kind}-${Date.now()}-${safe}`;
+    const { error } = await supabase.storage.from("doctor-documents").upload(path, file, {
+      upsert: true, contentType: file.type,
+    });
     if (error) throw error;
     return path;
   };

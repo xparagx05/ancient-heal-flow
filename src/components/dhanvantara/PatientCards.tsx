@@ -109,7 +109,7 @@ export function PatientHistoryCard() {
 
   const download = async (path: string | null) => {
     if (!path) return;
-    const { data } = await supabase.storage.from("prescriptions").createSignedUrl(path, 60 * 60);
+    const { data } = await supabase.storage.from("prescriptions").createSignedUrl(path, 300);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
@@ -182,7 +182,7 @@ export function PatientPrescriptionsCard() {
   }, [user]);
 
   const download = async (path: string) => {
-    const { data } = await supabase.storage.from("prescriptions").createSignedUrl(path, 60 * 60);
+    const { data } = await supabase.storage.from("prescriptions").createSignedUrl(path, 300);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 

@@ -58,7 +58,7 @@ export default function DoctorConsultation() {
           const its = (rx.prescription_items ?? []).sort((x: any, y: any) => x.order_index - y.order_index);
           setItems(its.length ? its : [{ ...EMPTY_ITEM }]);
           if (rx.pdf_path) {
-            const { data } = await supabase.storage.from("prescriptions").createSignedUrl(rx.pdf_path, 60 * 60);
+            const { data } = await supabase.storage.from("prescriptions").createSignedUrl(rx.pdf_path, 300);
             setPdfUrl(data?.signedUrl ?? null);
           }
         }

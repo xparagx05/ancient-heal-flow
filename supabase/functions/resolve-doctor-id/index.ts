@@ -6,9 +6,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { professional_id } = await req.json();
-    if (!professional_id || typeof professional_id !== "string") {
-      return json({ error: "professional_id required" }, 400);
+    const body = await req.json().catch(() => ({}));
+    const professional_id = body?.professional_id;
+    if (typeof professional_id !== "string" || professional_id.length < 3 || professional_id.length > 64 || !/^[A-Za-z0-9-]+$/.test(professional_id)) {
+      return json({ error: "Valid professional_id required" }, 400);
     }
     const client = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -17,7 +18,10 @@ Deno.serve(async (req) => {
     const { data, error } = await client.rpc("resolve_doctor_email", {
       _professional_id: professional_id.trim().toUpperCase(),
     });
-    if (error) return json({ error: error.message }, 500);
+    if (error) {
+      console.error("[resolve-doctor-id]", error);
+      return json({ error: "Lookup failed" }, 500);
+    }
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) return json({ error: "No doctor found with that Professional ID." }, 404);
     return json({
@@ -26,7 +30,8 @@ Deno.serve(async (req) => {
       is_active: row.is_active,
     });
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    console.error("[resolve-doctor-id]", e);
+    return json({ error: "Lookup failed" }, 500);
   }
 });
 
