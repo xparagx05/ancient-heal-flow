@@ -36,14 +36,11 @@ async function syncApptToSupabase(appt: Appointment): Promise<string | null> {
   } catch { return null; }
 }
 
-async function markSupaAppointmentPaid(supaId: string, paymentId?: string) {
-  try {
-    await supabase.from("appointments").update({
-      status: "confirmed",
-      payment_id: paymentId ?? null,
-    }).eq("id", supaId);
-  } catch { /* noop */ }
-}
+// Appointment confirmation is performed server-side by the
+// verify-razorpay-payment edge function (service role). Clients must NOT
+// update status / payment_id / fee directly — those columns are now
+// protected by RLS + a database trigger.
+
 
 
 export type Appointment = {
