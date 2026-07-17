@@ -33,6 +33,8 @@ export type RzpOpenOpts = {
   prefill?: { name?: string; email?: string; contact?: string };
   notes?: Record<string, string>;
   theme?: { color?: string };
+  /** DB appointment id (uuid) — sent to verify function to confirm server-side */
+  appointmentId?: string;
 };
 
 export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSuccess> {
