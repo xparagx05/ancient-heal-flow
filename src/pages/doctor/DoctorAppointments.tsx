@@ -154,6 +154,14 @@ export default function DoctorAppointments() {
                     <CheckCircle2 className="w-3 h-3" /> Complete
                   </button>
                 )}
+                {(r.status === "confirmed" || r.status === "in_progress") && r.mode === "video" && (
+                  <Link
+                    to={`/consult/${r.id}`}
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gradient-gold text-foreground hover:scale-[1.02] transition"
+                  >
+                    <Video className="w-3 h-3" /> Enter room
+                  </Link>
+                )}
                 <Link
                   to={`/doctor/consultations/${r.id}`}
                   className="inline-flex items-center gap-1 text-sm text-accent hover:underline"

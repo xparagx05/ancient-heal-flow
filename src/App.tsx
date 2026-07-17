@@ -34,6 +34,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
 const AdminDoctors = lazy(() => import("./pages/admin/AdminDoctors.tsx"));
 const DoctorPortalLogin = lazy(() => import("./pages/portal/DoctorPortalLogin.tsx"));
 const AdminPortalLogin = lazy(() => import("./pages/portal/AdminPortalLogin.tsx"));
+const ConsultationRoom = lazy(() => import("./pages/consultation/ConsultationRoom.tsx"));
 
 // Placeholders re-exported from DoctorDashboard/AdminDashboard
 import { DoctorPlaceholder } from "./pages/doctor/DoctorDashboard.tsx";
@@ -78,6 +79,10 @@ const App = () => (
                       <Route path="/subscription-payment/:plan" element={<SubscriptionPayment />} />
                       <Route path="/auth" element={<AuthPage />} />
                       <Route path="/unauthorized" element={<Unauthorized />} />
+
+                      {/* Video consultation (patient or doctor) */}
+                      <Route path="/consult/:appointmentId" element={<ProtectedRoute><ConsultationRoom /></ProtectedRoute>} />
+
 
                       {/* Portal entry points */}
                       <Route path="/portal/doctor" element={<DoctorPortalLogin />} />
