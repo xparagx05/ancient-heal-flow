@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         amount: Math.round(amount * 100), // paise
         currency,
         receipt: receipt || `rcpt_${Date.now()}`,
-        notes: { ...(notes || {}), user_id: userData.user.id },
+        notes: { ...(notes || {}), ...(userId ? { user_id: userId } : {}) },
       }),
     });
 
