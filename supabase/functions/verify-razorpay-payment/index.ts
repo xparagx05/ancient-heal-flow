@@ -12,18 +12,19 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    // ---- Require authenticated caller ----
+    // ---- Optional auth: guests can verify their own signature for subscription
+    // checkouts; appointment-linked verification below still requires a user. ----
     const authHeader = req.headers.get('Authorization') ?? '';
     const token = authHeader.replace(/^Bearer\s+/i, '');
-    if (!token) return json({ verified: false, error: 'Unauthorized' }, 401);
-
-    const supaAuth = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-    );
-    const { data: userData, error: userErr } = await supaAuth.auth.getUser(token);
-    if (userErr || !userData?.user) return json({ verified: false, error: 'Unauthorized' }, 401);
-    const userId = userData.user.id;
+    let userId: string | null = null;
+    if (token) {
+      const supaAuth = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+      );
+      const { data: userData } = await supaAuth.auth.getUser(token);
+      if (userData?.user) userId = userData.user.id;
+    }
 
     // ---- Strict input validation ----
     const body = await req.json().catch(() => ({}));
