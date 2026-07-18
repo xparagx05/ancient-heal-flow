@@ -56,7 +56,7 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
   if (!order?.id || !keyId) {
     throw new Error("Payment service is temporarily unavailable. Please try again.");
   }
-  if (!order?.id) throw new Error("Invalid order response");
+  
 
   return new Promise<RzpSuccess>((resolve, reject) => {
     const rzp = new window.Razorpay({
