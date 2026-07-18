@@ -48,8 +48,14 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
       notes: opts.notes,
     },
   });
-  if (error) throw new Error(error.message || "Could not create order");
-  const { order, keyId } = data as { order: any; keyId: string };
+  if (error) {
+    console.error("[razorpay] create-order failed", error);
+    throw new Error("Unable to start payment right now. Please try again in a moment.");
+  }
+  const { order, keyId } = (data || {}) as { order: any; keyId: string };
+  if (!order?.id || !keyId) {
+    throw new Error("Payment service is temporarily unavailable. Please try again.");
+  }
   if (!order?.id) throw new Error("Invalid order response");
 
   return new Promise<RzpSuccess>((resolve, reject) => {
