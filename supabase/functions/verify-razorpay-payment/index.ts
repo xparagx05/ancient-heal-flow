@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
 
     // ---- Server-side appointment confirmation (service role) ----
     if (appointment_id) {
+      if (!userId) return json({ verified: true, updated: false, error: 'Unauthorized' }, 401);
       const admin = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
