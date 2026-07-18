@@ -9,19 +9,20 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    // --- AuthN: require a valid JWT so anonymous callers can't spam order creation ---
+    // --- Optional auth: subscription checkout is available to guests, but if a
+    // JWT is present we validate it and stamp the user_id on the Razorpay order. ---
+    let userId: string | null = null;
     const authHeader = req.headers.get('Authorization') ?? '';
     const jwt = authHeader.replace(/^Bearer\s+/i, '');
-    if (!jwt) {
-      return json({ error: 'Unauthorized' }, 401);
-    }
-    const admin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-    const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
-    if (userErr || !userData?.user) {
-      return json({ error: 'Unauthorized' }, 401);
+    if (jwt) {
+      const admin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
+      if (!userErr && userData?.user) {
+        userId = userData.user.id;
+      }
     }
 
     // --- Input validation ---
