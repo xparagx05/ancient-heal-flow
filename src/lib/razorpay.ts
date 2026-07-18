@@ -81,7 +81,10 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
           const { data: v, error: verr } = await supabase.functions.invoke("verify-razorpay-payment", {
             body: { ...resp, appointment_id: opts.appointmentId },
           });
-          if (verr) return reject(new Error(verr.message || "Verification failed"));
+          if (verr) {
+            console.error("[razorpay] verify failed", verr);
+            return reject(new Error("Payment verification failed. If money was debited, it will be auto-refunded within 5-7 days."));
+          }
           if (!v?.verified) return reject(new Error("Payment signature invalid"));
           resolve(resp);
         } catch (e) {
