@@ -48,9 +48,15 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
       notes: opts.notes,
     },
   });
-  if (error) throw new Error(error.message || "Could not create order");
-  const { order, keyId } = data as { order: any; keyId: string };
-  if (!order?.id) throw new Error("Invalid order response");
+  if (error) {
+    console.error("[razorpay] create-order failed", error);
+    throw new Error("Unable to start payment right now. Please try again in a moment.");
+  }
+  const { order, keyId } = (data || {}) as { order: any; keyId: string };
+  if (!order?.id || !keyId) {
+    throw new Error("Payment service is temporarily unavailable. Please try again.");
+  }
+  
 
   return new Promise<RzpSuccess>((resolve, reject) => {
     const rzp = new window.Razorpay({
@@ -75,7 +81,10 @@ export async function openRazorpayCheckout(opts: RzpOpenOpts): Promise<RzpSucces
           const { data: v, error: verr } = await supabase.functions.invoke("verify-razorpay-payment", {
             body: { ...resp, appointment_id: opts.appointmentId },
           });
-          if (verr) return reject(new Error(verr.message || "Verification failed"));
+          if (verr) {
+            console.error("[razorpay] verify failed", verr);
+            return reject(new Error("Payment verification failed. If money was debited, it will be auto-refunded within 5-7 days."));
+          }
           if (!v?.verified) return reject(new Error("Payment signature invalid"));
           resolve(resp);
         } catch (e) {
